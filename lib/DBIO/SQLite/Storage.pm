@@ -11,7 +11,7 @@ __PACKAGE__->register_driver('SQLite' => __PACKAGE__);
 
 use Context::Preserve 'preserve_context';
 use SQL::Abstract::Util 'is_plain_value';
-use DBIO::_Util qw(modver_gt_or_eq sigwarn_silencer);
+use DBIO::Util qw(modver_gt_or_eq sigwarn_silencer);
 use DBIO::Carp;
 use Try::Tiny;
 use namespace::clean;
@@ -20,6 +20,20 @@ __PACKAGE__->sql_maker_class('DBIO::SQLite::SQLMaker');
 __PACKAGE__->sql_limit_dialect ('LimitOffset');
 __PACKAGE__->sql_quote_char ('"');
 __PACKAGE__->datetime_parser_type ('DateTime::Format::SQLite');
+
+=head1 DESCRIPTION
+
+SQLite storage driver for DBIO. Extends L<DBIO::Storage::DBI> with
+SQLite-specific behavior including savepoint support, foreign key pragma
+helpers, database file backup, and workarounds for known L<DBD::SQLite> bugs.
+
+This class is registered as the driver for C<SQLite> and is loaded
+automatically when connecting to a SQLite DSN. It uses
+L<DBIO::SQLite::SQLMaker> for SQL generation, C<LimitOffset> pagination,
+double-quote identifiers, and L<DateTime::Format::SQLite> for datetime
+parsing.
+
+=cut
 
 sub _determine_supports_multicolumn_in {
   ( shift->_server_info->{normalized_dbms_version} < '3.014' )
@@ -62,6 +76,19 @@ sub backup {
 
   return $backupfile;
 }
+
+=method backup
+
+    my $backupfile = $storage->backup($dir);
+    my $backupfile = $storage->backup;          # defaults to './'
+
+Copy the live SQLite database file to C<$dir>. The backup filename includes
+a timestamp prefix. Returns the full path to the backup file.
+
+Throws an exception if the database filename cannot be determined from the
+DSN or if the file copy fails.
+
+=cut
 
 sub _exec_svp_begin {
   my ($self, $name) = @_;
@@ -194,6 +221,15 @@ sub deployment_statements {
   $self->next::method($schema, $type, $version, $dir, $sqltargs, @rest);
 }
 
+=method deployment_statements
+
+Overrides the parent to inject the connected SQLite version into
+C<$sqltargs-E<gt>{producer_args}{sqlite_version}> when not already set.
+This allows SQL::Translator to generate version-appropriate DDL. All
+arguments are passed through to L<DBIO::Storage::DBI/deployment_statements>.
+
+=cut
+
 sub bind_attribute_by_data_type {
 
   # According to http://www.sqlite.org/datatype3.html#storageclasses
@@ -207,6 +243,19 @@ sub bind_attribute_by_data_type {
     : undef
   ;
 }
+
+=method bind_attribute_by_data_type
+
+Returns C<DBI::SQL_BIGINT> for any integer-family column type (C<int>,
+C<integer>, C<tinyint>, C<smallint>, C<mediumint>, C<bigint>, C<int1>,
+C<int2>, C<int4>, C<int8>). Returns C<undef> for all other types, deferring
+to the default binding behavior.
+
+SQLite stores all numeric values as dynamically-sized integers up to 8 bytes,
+so binding everything as C<SQL_BIGINT> is safe and avoids unnecessary type
+coercions.
+
+=cut
 
 # FIXME - what the flying fuck... work around RT#76395
 # DBD::SQLite warns on binding >32 bit values with 32 bit IVs
@@ -319,6 +368,18 @@ sub with_deferred_fk_checks {
   return preserve_context { $sub->() } after => sub { $txn_scope_guard->commit };
 }
 
+=method with_deferred_fk_checks
+
+    $storage->with_deferred_fk_checks(sub { ... });
+
+Execute C<$sub> inside a transaction with C<PRAGMA defer_foreign_keys = ON>.
+Foreign key constraint checking is deferred until the transaction commits,
+allowing bulk inserts or other operations that temporarily violate referential
+integrity within the same transaction. The transaction is committed
+automatically after C<$sub> returns.
+
+=cut
+
 sub connect_call_use_foreign_keys {
   my $self = shift;
 
@@ -326,5 +387,32 @@ sub connect_call_use_foreign_keys {
     'PRAGMA foreign_keys = ON'
   );
 }
+
+=method connect_call_use_foreign_keys
+
+A connect-time callback that executes C<PRAGMA foreign_keys = ON>. SQLite
+does not enforce foreign key constraints by default. Enable it by passing
+C<on_connect_call =E<gt> 'use_foreign_keys'> in your connection options:
+
+    $schema->connect(
+        'dbi:SQLite:db/app.db', '', '',
+        { on_connect_call => 'use_foreign_keys' },
+    );
+
+=cut
+
+=seealso
+
+=over
+
+=item * L<DBIO::SQLite> - Schema component that activates this storage
+
+=item * L<DBIO::SQLite::SQLMaker> - SQL generation for SQLite
+
+=item * L<DBIO::Storage::DBI> - Base DBI storage class
+
+=back
+
+=cut
 
 1;

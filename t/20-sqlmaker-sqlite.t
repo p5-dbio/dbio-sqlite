@@ -8,7 +8,7 @@ my $schema = DBIO::Test->init_schema;
 
 is_same_sql_bind(
   $schema->resultset('Artist')->search ({}, {for => 'update'})->as_query,
-  '(SELECT me.artistid, me.name, me.rank, me.charfield FROM artist me)', [],
+  '(SELECT me.artistid, me.name, me.rank, me.charfield FROM artist me FOR UPDATE)', [],
 );
 
 done_testing;

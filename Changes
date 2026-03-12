@@ -1,0 +1,6 @@
+Revision history for DBIO-SQLite
+
+{{$NEXT}}
+    - Add module POD for DBIO::SQLite
+    - Add README with scope, migration mapping, and test notes
+    - Clarify migration references against historical DBIx::Class naming

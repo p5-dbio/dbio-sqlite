@@ -9,7 +9,7 @@ SQLite-specific schema management for DBIO (the DBIx::Class fork, see ../dbio/).
 ## Namespace
 
 - `DBIO::SQLite` -- SQLite schema component
-- `DBIO::SQLite::Storage` -- SQLite storage (replaces DBIO::Storage::DBI::SQLite)
+- `DBIO::SQLite::Storage` -- SQLite storage (replaces DBIx::Class::Storage::DBI::SQLite)
 
 ## Usage
 
@@ -21,4 +21,4 @@ __PACKAGE__->load_components('SQLite');
 
 ## Build System
 
-Uses Dist::Zilla with `[@Author::GETTY]` plugin bundle.
+Uses Dist::Zilla with `[@DBIO]` plugin bundle. PodWeaver with `=attr` and `=method` collectors.

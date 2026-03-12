@@ -8,7 +8,7 @@ use Time::HiRes 'time';
 use Math::BigInt;
 
 use DBIO::Test;
-use DBIO::_Util qw( sigwarn_silencer modver_gt_or_eq modver_gt_or_eq_and_lt );
+use DBIO::Util qw( sigwarn_silencer modver_gt_or_eq modver_gt_or_eq_and_lt );
 
 # make one deploy() round before we load anything else - need this in order
 # to prime SQLT if we are using it (deep depchain is deep)
