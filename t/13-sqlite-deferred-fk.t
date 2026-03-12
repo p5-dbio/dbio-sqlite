@@ -4,12 +4,12 @@ use warnings;
 use Test::More;
 use Test::Exception;
 
-use DBIO::Test;
+use DBIO::SQLite::Test;
 
 # This test verifies that with_deferred_fk_checks works on SQLite
 # by using PRAGMA defer_foreign_keys = ON within a transaction.
 
-my $schema = DBIO::Test->init_schema(
+my $schema = DBIO::SQLite::Test->init_schema(
   dsn         => 'dbi:SQLite::memory:',
   no_deploy   => 1,
   no_populate => 1,

@@ -356,13 +356,24 @@ sub _dbi_attrs_for_bind {
       # This causes cross-type comparison failures: INTEGER < TEXT is always
       # true in SQLite's type sort order, so e.g. COUNT(x) > ? with a text
       # bind always returns FALSE. Fix by hinting numeric values as SQL_INTEGER
-      # when no column-based type info is available (e.g. HAVING clauses with
-      # literal SQL).
+      # when no column-based type info is available.
+      #
+      # Apply to:
+      # - Anonymous binds (no dbic_colname) from literal SQL
+      # - Expression binds (colname contains parens, e.g. 'COUNT(x)')
+      # Do NOT apply to plain column aliases (e.g. 'newest_cd_year') as
+      # these may reference TEXT-typed columns containing numeric strings.
       defined $bind->[$i][1]
         and
       ! ref $bind->[$i][1]
         and
       looks_like_number($bind->[$i][1])
+        and
+      (
+        ! $bind->[$i][0]{dbic_colname}
+          or
+        $bind->[$i][0]{dbic_colname} =~ /\(/  # expression (COUNT, MAX, etc.)
+      )
     ) {
       $bindattrs->[$i] = DBI::SQL_INTEGER();
     }

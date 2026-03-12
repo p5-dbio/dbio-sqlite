@@ -1,0 +1,507 @@
+package DBICTest::Kubernetes;
+use strict;
+use warnings;
+
+use Carp qw(croak);
+use File::Spec;
+use POSIX qw(WNOHANG);
+
+=head1 NAME
+
+DBICTest::Kubernetes - Provision temporary database pods in Kubernetes for DBIO testing
+
+=head1 SYNOPSIS
+
+    my $k8s = DBICTest::Kubernetes->new(
+        kubeconfig => $path,
+        databases  => [qw(pg mysql)],
+    );
+
+    $k8s->deploy_databases;
+    $k8s->wait_for_ready;
+
+    # Local mode: port-forward and get env vars
+    $k8s->setup_port_forwards;
+    my %env = $k8s->env_vars;
+    local @ENV{keys %env} = values %env;
+    # PostgreSQL tests moved to dbio-postgresql distribution
+    system('prove', '-l', 't/');
+
+    $k8s->cleanup;
+
+=cut
+
+sub new {
+    my ($class, %args) = @_;
+
+    my $kubeconfig = $args{kubeconfig}
+        // $ENV{DBICTEST_KUBECONFIG}
+        // $ENV{KUBECONFIG}
+        // File::Spec->catfile($ENV{HOME}, '.kube', 'config');
+
+    croak "Kubeconfig not found: $kubeconfig" unless -f $kubeconfig;
+
+    my $namespace = $args{namespace} // _generate_namespace();
+    my $databases = $args{databases} // [qw(pg mysql)];
+
+    # Validate database names
+    my %valid = map { $_ => 1 } qw(pg mysql);
+    for my $db (@$databases) {
+        croak "Unknown database: $db (valid: pg, mysql)" unless $valid{$db};
+    }
+
+    require Kubernetes::REST::Kubeconfig;
+    my $kc = Kubernetes::REST::Kubeconfig->new(
+        kubeconfig_path => $kubeconfig,
+    );
+    my $api = $kc->api;
+
+    return bless {
+        kubeconfig      => $kubeconfig,
+        namespace       => $namespace,
+        databases       => $databases,
+        api             => $api,
+        port_forward_pids => [],
+        local_ports     => {},
+        _deployed       => 0,
+        _ready          => 0,
+    }, $class;
+}
+
+sub namespace  { $_[0]->{namespace} }
+sub databases  { $_[0]->{databases} }
+sub api        { $_[0]->{api} }
+sub kubeconfig { $_[0]->{kubeconfig} }
+
+sub _generate_namespace {
+    my @chars = ('a'..'z', '0'..'9');
+    my $suffix = join '', map { $chars[rand @chars] } 1..8;
+    return "dbic-test-$suffix";
+}
+
+# ============================================================================
+# DATABASE SPECS
+# ============================================================================
+
+my %DB_SPECS = (
+    pg => {
+        name       => 'pg',
+        image      => 'postgres:16',
+        port       => 5432,
+        svc_name   => 'pg-svc',
+        env        => [
+            { name => 'POSTGRES_PASSWORD', value => 'dbictest' },
+            { name => 'POSTGRES_DB',       value => 'dbic_test' },
+        ],
+        readiness_cmd => [qw(pg_isready -U postgres)],
+        dsn_template  => 'dbi:Pg:database=dbic_test;host=%s;port=%s',
+        user          => 'postgres',
+        pass          => 'dbictest',
+        env_prefix    => 'DBICTEST_PG',
+    },
+    mysql => {
+        name       => 'mysql',
+        image      => 'mysql:8.0',
+        port       => 3306,
+        svc_name   => 'mysql-svc',
+        env        => [
+            { name => 'MYSQL_ROOT_PASSWORD', value => 'dbictest' },
+            { name => 'MYSQL_DATABASE',      value => 'dbic_test' },
+        ],
+        readiness_cmd => [qw(mysqladmin ping -h localhost)],
+        dsn_template  => ( eval { require DBD::MariaDB; 1 }
+            ? 'dbi:MariaDB:database=dbic_test;host=%s;port=%s'
+            : 'dbi:mysql:database=dbic_test;host=%s;port=%s'
+        ),
+        user          => 'root',
+        pass          => 'dbictest',
+        env_prefix    => 'DBICTEST_MYSQL',
+    },
+);
+
+# ============================================================================
+# DEPLOY
+# ============================================================================
+
+sub deploy_databases {
+    my ($self) = @_;
+
+    my $api = $self->api;
+    my $ns  = $self->namespace;
+
+    # Create namespace
+    print "Creating namespace $ns...\n";
+    my $ns_obj = $api->new_object(Namespace =>
+        metadata => { name => $ns },
+    );
+    $api->create($ns_obj);
+
+    # Deploy each database
+    for my $db (@{$self->databases}) {
+        my $spec = $DB_SPECS{$db} or croak "No spec for database: $db";
+        $self->_deploy_db($spec);
+    }
+
+    $self->{_deployed} = 1;
+}
+
+sub _deploy_db {
+    my ($self, $spec) = @_;
+
+    my $api = $self->api;
+    my $ns  = $self->namespace;
+
+    print "Deploying $spec->{name} pod...\n";
+
+    # Create Pod
+    my $pod = $api->new_object(Pod =>
+        metadata => {
+            name      => $spec->{name},
+            namespace => $ns,
+            labels    => { app => $spec->{name}, role => 'dbic-test-db' },
+        },
+        spec => {
+            containers => [{
+                name  => $spec->{name},
+                image => $spec->{image},
+                ports => [{ containerPort => $spec->{port} }],
+                env   => $spec->{env},
+                readinessProbe => {
+                    exec => { command => $spec->{readiness_cmd} },
+                    initialDelaySeconds => 5,
+                    periodSeconds       => 3,
+                    timeoutSeconds      => 2,
+                    failureThreshold    => 30,
+                },
+            }],
+        },
+    );
+    $api->create($pod);
+
+    # Create Service
+    my $svc = $api->new_object(Service =>
+        metadata => {
+            name      => $spec->{svc_name},
+            namespace => $ns,
+        },
+        spec => {
+            selector => { app => $spec->{name} },
+            ports    => [{
+                port       => $spec->{port},
+                targetPort => $spec->{port},
+                protocol   => 'TCP',
+            }],
+        },
+    );
+    $api->create($svc);
+}
+
+# ============================================================================
+# READINESS
+# ============================================================================
+
+sub wait_for_ready {
+    my ($self, %opts) = @_;
+
+    my $timeout  = $opts{timeout} // 120;
+    my $interval = $opts{interval} // 3;
+
+    croak "Must call deploy_databases first" unless $self->{_deployed};
+
+    my $api = $self->api;
+    my $ns  = $self->namespace;
+    my $deadline = time + $timeout;
+
+    for my $db (@{$self->databases}) {
+        print "Waiting for $db to be ready...\n";
+
+        while (time < $deadline) {
+            my $pod = eval {
+                $api->get('Pod', $db, namespace => $ns);
+            };
+            if ($pod && $pod->status) {
+                my $conditions = $pod->status->conditions;
+                if ($conditions) {
+                    for my $cond (@$conditions) {
+                        if ($cond->type eq 'Ready' && $cond->status eq 'True') {
+                            print "$db is ready.\n";
+                            goto NEXT_DB;
+                        }
+                    }
+                }
+            }
+            sleep $interval;
+        }
+
+        croak "Timed out waiting for $db to become ready (${timeout}s)";
+        NEXT_DB:
+    }
+
+    $self->{_ready} = 1;
+}
+
+# ============================================================================
+# CONNECTION INFO
+# ============================================================================
+
+sub connection_info {
+    my ($self, %opts) = @_;
+
+    my $mode = $opts{mode} // 'local';
+    my $ns   = $self->namespace;
+    my %info;
+
+    for my $db (@{$self->databases}) {
+        my $spec = $DB_SPECS{$db};
+
+        my ($host, $port);
+        if ($mode eq 'cluster') {
+            $host = "$spec->{svc_name}.$ns.svc.cluster.local";
+            $port = $spec->{port};
+        } else {
+            # local mode — use port-forward ports
+            $host = '127.0.0.1';
+            $port = $self->{local_ports}{$db}
+                or croak "No local port for $db — call setup_port_forwards first";
+        }
+
+        $info{$db} = {
+            dsn  => sprintf($spec->{dsn_template}, $host, $port),
+            user => $spec->{user},
+            pass => $spec->{pass},
+            host => $host,
+            port => $port,
+        };
+    }
+
+    return \%info;
+}
+
+sub env_vars {
+    my ($self, %opts) = @_;
+
+    my $info = $self->connection_info(%opts);
+    my %env;
+
+    for my $db (keys %$info) {
+        my $spec   = $DB_SPECS{$db};
+        my $prefix = $spec->{env_prefix};
+
+        $env{"${prefix}_DSN"}  = $info->{$db}{dsn};
+        $env{"${prefix}_USER"} = $info->{$db}{user};
+        $env{"${prefix}_PASS"} = $info->{$db}{pass};
+    }
+
+    return %env;
+}
+
+# ============================================================================
+# PORT FORWARDING (local mode)
+# ============================================================================
+
+sub setup_port_forwards {
+    my ($self) = @_;
+
+    croak "Must call deploy_databases and wait_for_ready first"
+        unless $self->{_ready};
+
+    my $ns = $self->namespace;
+
+    for my $db (@{$self->databases}) {
+        my $spec = $DB_SPECS{$db};
+        my $local_port = _find_free_port();
+
+        $self->{local_ports}{$db} = $local_port;
+
+        print "Port-forwarding $spec->{svc_name} to 127.0.0.1:$local_port...\n";
+
+        my $pid = fork();
+        if (!defined $pid) {
+            croak "fork failed: $!";
+        }
+        if ($pid == 0) {
+            # child
+            exec('kubectl',
+                '--kubeconfig=' . $self->kubeconfig,
+                'port-forward',
+                '-n', $ns,
+                "svc/$spec->{svc_name}",
+                "$local_port:$spec->{port}",
+            );
+            die "exec kubectl failed: $!";
+        }
+
+        push @{$self->{port_forward_pids}}, $pid;
+    }
+
+    # Give port-forwards a moment to establish
+    sleep 2;
+
+    # Verify they're still running
+    for my $pid (@{$self->{port_forward_pids}}) {
+        my $res = waitpid($pid, WNOHANG);
+        if ($res != 0) {
+            croak "Port-forward process $pid died unexpectedly";
+        }
+    }
+}
+
+sub _find_free_port {
+    require IO::Socket::INET;
+    my $sock = IO::Socket::INET->new(
+        LocalAddr => '127.0.0.1',
+        LocalPort => 0,
+        Proto     => 'tcp',
+        Listen    => 1,
+        ReuseAddr => 1,
+    ) or croak "Cannot find free port: $!";
+    my $port = $sock->sockport;
+    close $sock;
+    return $port;
+}
+
+# ============================================================================
+# IN-CLUSTER JOB MODE
+# ============================================================================
+
+sub deploy_test_job {
+    my ($self, %opts) = @_;
+
+    my $api   = $self->api;
+    my $ns    = $self->namespace;
+    my $image = $opts{image} // 'dbic-test:latest';
+    my @args  = @{$opts{prove_args} // ['-l', 't/']};
+
+    # Build env vars for in-cluster mode
+    my %env = $self->env_vars(mode => 'cluster');
+    my @env_list = map {
+        { name => $_, value => $env{$_} }
+    } sort keys %env;
+
+    print "Deploying test Job in namespace $ns...\n";
+
+    my $job = $api->new_object(Job =>
+        metadata => {
+            name      => 'dbic-test-runner',
+            namespace => $ns,
+        },
+        spec => {
+            backoffLimit => 0,
+            template => {
+                spec => {
+                    restartPolicy => 'Never',
+                    containers => [{
+                        name    => 'test-runner',
+                        image   => $image,
+                        command => ['prove'],
+                        args    => \@args,
+                        env     => \@env_list,
+                    }],
+                },
+            },
+        },
+    );
+    $api->create($job);
+
+    return 'dbic-test-runner';
+}
+
+sub wait_for_job {
+    my ($self, %opts) = @_;
+
+    my $job_name = $opts{name} // 'dbic-test-runner';
+    my $timeout  = $opts{timeout} // 3600;
+    my $interval = $opts{interval} // 5;
+
+    my $api = $self->api;
+    my $ns  = $self->namespace;
+    my $deadline = time + $timeout;
+
+    print "Waiting for Job $job_name to complete...\n";
+
+    while (time < $deadline) {
+        my $job = eval {
+            $api->get('Job', $job_name, namespace => $ns);
+        };
+
+        if ($job && $job->status) {
+            my $succeeded = $job->status->succeeded;
+            my $failed    = $job->status->failed;
+
+            if ($succeeded && $succeeded > 0) {
+                print "Job succeeded.\n";
+                return 0;  # exit code 0
+            }
+            if ($failed && $failed > 0) {
+                print "Job failed.\n";
+                return 1;  # exit code 1
+            }
+        }
+        sleep $interval;
+    }
+
+    croak "Timed out waiting for Job $job_name (${timeout}s)";
+}
+
+sub fetch_job_logs {
+    my ($self, %opts) = @_;
+
+    my $job_name = $opts{name} // 'dbic-test-runner';
+    my $api = $self->api;
+    my $ns  = $self->namespace;
+
+    # Find pods belonging to the job
+    my $pods = $api->list('Pod',
+        namespace     => $ns,
+        labelSelector => "job-name=$job_name",
+    );
+
+    my @logs;
+    for my $pod ($pods->items->@*) {
+        my $pod_name = $pod->metadata->name;
+
+        # Use kubectl for logs since Kubernetes::REST doesn't expose pod logs directly
+        my $log = `kubectl --kubeconfig=${\$self->kubeconfig} logs -n $ns $pod_name 2>&1`;
+        push @logs, { pod => $pod_name, log => $log };
+    }
+
+    return \@logs;
+}
+
+# ============================================================================
+# CLEANUP
+# ============================================================================
+
+sub cleanup {
+    my ($self) = @_;
+
+    # Kill port-forward processes
+    for my $pid (@{$self->{port_forward_pids}}) {
+        kill 'TERM', $pid;
+        waitpid($pid, 0);
+    }
+    $self->{port_forward_pids} = [];
+
+    # Delete namespace (cascading delete of all resources)
+    if ($self->{_deployed}) {
+        my $ns = $self->namespace;
+        print "Deleting namespace $ns...\n";
+        eval {
+            $self->api->delete('Namespace', $ns);
+        };
+        if ($@) {
+            warn "Warning: failed to delete namespace $ns: $@\n";
+        }
+    }
+}
+
+sub DESTROY {
+    my ($self) = @_;
+
+    # Kill any leftover port-forward processes
+    for my $pid (@{$self->{port_forward_pids} // []}) {
+        kill 'TERM', $pid;
+    }
+}
+
+1;

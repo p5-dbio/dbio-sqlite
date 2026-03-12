@@ -4,13 +4,13 @@ use warnings;
 use Test::More;
 use Test::Warn;
 
-use DBIO::Test;
+use DBIO::SQLite::Test;
 
 # Regression test for RT#169546
 # DBIO incorrectly warns about missing primary key values when using
 # scalar references for database functions (like \'UUID()', \'RANDOM()', etc.)
 
-my $schema = DBIO::Test->init_schema( dsn => 'dbi:SQLite::memory:' );
+my $schema = DBIO::SQLite::Test->init_schema( dsn => 'dbi:SQLite::memory:' );
 
 # Create a test table with a non-auto-increment primary key
 $schema->storage->dbh->do(q{

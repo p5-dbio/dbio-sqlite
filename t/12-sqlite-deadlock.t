@@ -8,7 +8,7 @@ use File::Temp ();
 plan skip_all => 'Set $ENV{DBIOTEST_EXTENDED} to run this test'
   unless $ENV{DBIOTEST_EXTENDED};
 
-use DBIO::Test;
+use DBIO::SQLite::Test;
 
 plan tests => 2;
 my $wait_for = 120;  # how many seconds to wait
@@ -35,8 +35,8 @@ for my $close (0,1) {
   lives_ok (sub {
     my $schema = DBIO::Test::Schema->connect("DBI:SQLite:$tmp_fn");
     $schema->storage->dbh_do(sub { $_[1]->do('PRAGMA synchronous = OFF') });
-    DBIO::Test->deploy_schema($schema);
-    DBIO::Test->populate_schema($schema);
+    DBIO::SQLite::Test->deploy_schema($schema);
+    DBIO::SQLite::Test->populate_schema($schema);
   });
 
   alarm 0;

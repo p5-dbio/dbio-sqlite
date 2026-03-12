@@ -7,12 +7,12 @@ use Test::Warn;
 use Time::HiRes 'time';
 use Math::BigInt;
 
-use DBIO::Test;
+use DBIO::SQLite::Test;
 use DBIO::Util qw( sigwarn_silencer modver_gt_or_eq modver_gt_or_eq_and_lt );
 
 # make one deploy() round before we load anything else - need this in order
 # to prime SQLT if we are using it (deep depchain is deep)
-DBIO::Test->init_schema( dsn => 'dbi:SQLite::memory:', no_populate => 1 );
+DBIO::SQLite::Test->init_schema( dsn => 'dbi:SQLite::memory:', no_populate => 1 );
 
 # check that we work somewhat OK with braindead SQLite transaction handling
 #
@@ -37,7 +37,7 @@ for my $prefix_comment (qw/Begin_only Commit_only Begin_and_Commit/) {
 
   my ($c_begin, $c_commit) = map { $prefix_comment =~ $_ ? 1 : 0 } (qr/Begin/, qr/Commit/);
 
-  my $schema = DBIO::Test->init_schema( dsn => 'dbi:SQLite::memory:', no_deploy => 1 );
+  my $schema = DBIO::SQLite::Test->init_schema( dsn => 'dbi:SQLite::memory:', no_deploy => 1 );
   my $ars = $schema->resultset('Artist');
 
   ok (! $schema->storage->connected, 'No connection yet');
@@ -99,7 +99,7 @@ DDL
 modver_gt_or_eq('DBD::SQLite', '1.33');
 
 warnings_are {
-  my $schema = DBIO::Test->init_schema( dsn => 'dbi:SQLite::memory:', no_populate => 1 );
+  my $schema = DBIO::SQLite::Test->init_schema( dsn => 'dbi:SQLite::memory:', no_populate => 1 );
   my $rs = $schema->resultset('Artist');
   is ($rs->count, 0, 'Start with empty table');
 
@@ -138,7 +138,7 @@ warnings_are {
   });
 } [], 'No warnings emitted';
 
-my $schema = DBIO::Test->init_schema( dsn => 'dbi:SQLite::memory:' );
+my $schema = DBIO::SQLite::Test->init_schema( dsn => 'dbi:SQLite::memory:' );
 
 # make sure the side-effects of RT#67581 do not result in data loss
 my $row;
