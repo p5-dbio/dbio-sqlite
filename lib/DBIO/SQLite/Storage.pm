@@ -12,6 +12,7 @@ __PACKAGE__->register_driver('SQLite' => __PACKAGE__);
 use Context::Preserve 'preserve_context';
 use SQL::Abstract::Util 'is_plain_value';
 use DBIO::Util qw(modver_gt_or_eq sigwarn_silencer);
+use Scalar::Util 'looks_like_number';
 use DBIO::Carp;
 use Try::Tiny;
 use namespace::clean;
@@ -313,46 +314,59 @@ sub _dbi_attrs_for_bind {
   }
 
   for my $i (0.. $#$bindattrs) {
-    if (
-      defined $bindattrs->[$i]
-        and
-      defined $bind->[$i][1]
-        and
-      grep { $bindattrs->[$i] eq $_ } (
-        DBI::SQL_INTEGER(), DBI::SQL_TINYINT(), DBI::SQL_SMALLINT(), DBI::SQL_BIGINT()
-      )
-    ) {
-      if ( $bind->[$i][1] !~ /^ [\+\-]? [0-9]+ (?: \. 0* )? $/x ) {
-        carp_unique( sprintf (
-          "Non-integer value supplied for column '%s' despite the integer datatype",
-          $bind->[$i][0]{dbic_colname} || "# $i"
-        ) );
-        undef $bindattrs->[$i];
-      }
-      elsif (
-        ! $DBD::SQLite::__DBIC_CHECK_dbd_can_bind_bigint_values
+
+    if (defined $bindattrs->[$i]) {
+      # Validate existing integer bind attributes
+      if (
+        defined $bind->[$i][1]
+          and
+        grep { $bindattrs->[$i] eq $_ } (
+          DBI::SQL_INTEGER(), DBI::SQL_TINYINT(), DBI::SQL_SMALLINT(), DBI::SQL_BIGINT()
+        )
       ) {
-        # unsigned 32 bit ints have a range of -2,147,483,648 to 2,147,483,647
-        # alternatively expressed as the hexadecimal numbers below
-        # the comparison math will come out right regardless of ivsize, since
-        # we are operating within 31 bits
-        # P.S. 31 because one bit is lost for the sign
-        if ($bind->[$i][1] > 0x7fff_ffff or $bind->[$i][1] < -0x8000_0000) {
+        if ( $bind->[$i][1] !~ /^ [\+\-]? [0-9]+ (?: \. 0* )? $/x ) {
           carp_unique( sprintf (
-            "An integer value occupying more than 32 bits was supplied for column '%s' "
-          . 'which your version of DBD::SQLite (%s) can not bind properly so DBIC '
-          . 'will treat it as a string instead, consider upgrading to at least '
-          . 'DBD::SQLite version 1.37',
-            $bind->[$i][0]{dbic_colname} || "# $i",
-            DBD::SQLite->VERSION,
+            "Non-integer value supplied for column '%s' despite the integer datatype",
+            $bind->[$i][0]{dbic_colname} || "# $i"
           ) );
           undef $bindattrs->[$i];
         }
-        else {
-          $bindattrs->[$i] = DBI::SQL_INTEGER()
+        elsif (
+          ! $DBD::SQLite::__DBIC_CHECK_dbd_can_bind_bigint_values
+        ) {
+          if ($bind->[$i][1] > 0x7fff_ffff or $bind->[$i][1] < -0x8000_0000) {
+            carp_unique( sprintf (
+              "An integer value occupying more than 32 bits was supplied for column '%s' "
+            . 'which your version of DBD::SQLite (%s) can not bind properly so DBIO '
+            . 'will treat it as a string instead, consider upgrading to at least '
+            . 'DBD::SQLite version 1.37',
+              $bind->[$i][0]{dbic_colname} || "# $i",
+              DBD::SQLite->VERSION,
+            ) );
+            undef $bindattrs->[$i];
+          }
+          else {
+            $bindattrs->[$i] = DBI::SQL_INTEGER()
+          }
         }
       }
     }
+    elsif (
+      # SQLite binds all parameters as TEXT by default (sqlite3_bind_text).
+      # This causes cross-type comparison failures: INTEGER < TEXT is always
+      # true in SQLite's type sort order, so e.g. COUNT(x) > ? with a text
+      # bind always returns FALSE. Fix by hinting numeric values as SQL_INTEGER
+      # when no column-based type info is available (e.g. HAVING clauses with
+      # literal SQL).
+      defined $bind->[$i][1]
+        and
+      ! ref $bind->[$i][1]
+        and
+      looks_like_number($bind->[$i][1])
+    ) {
+      $bindattrs->[$i] = DBI::SQL_INTEGER();
+    }
+
   }
 
   return $bindattrs;
