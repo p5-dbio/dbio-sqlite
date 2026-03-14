@@ -7,11 +7,6 @@ use base 'DBIO::Loader::DBI::Component::QuotedDefault';
 use mro 'c3';
 use DBIO::Loader::Table ();
 
-
-=head1 NAME
-
-DBIO::SQLite::Loader - DBIO::Loader::DBI SQLite Implementation.
-
 =head1 DESCRIPTION
 
 See L<DBIO::Loader> and L<DBIO::Loader::Base>.
@@ -264,15 +259,6 @@ sub _table_info_matches {
 
 L<DBIO::Loader>, L<DBIO::Loader::Base>,
 L<DBIO::Loader::DBI>
-
-=head1 AUTHORS
-
-See L<DBIO::Loader/AUTHORS>.
-
-=head1 LICENSE
-
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut
 

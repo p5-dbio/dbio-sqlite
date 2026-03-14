@@ -24,6 +24,12 @@ L<DBIO::SQLite> driver distribution.
   # File-based schema (for reconnect/persistence tests)
   my $schema = DBIO::SQLite::Test->init_schema(sqlite_use_file => 1);
 
+  # Shared driver test through replicated storage
+  my $replicated = DBIO::SQLite::Test->init_schema(
+    replicated   => 1,
+    storage_type => 'DBIO::SQLite::Storage',
+  );
+
 =cut
 
 sub import {

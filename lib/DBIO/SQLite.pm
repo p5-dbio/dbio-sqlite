@@ -56,6 +56,15 @@ SQLite DSNs and load the new storage class via the driver registry.
 SQLite tests in this distribution use in-memory databases and do not require
 database credentials.
 
+Offline SQLMaker tests can use L<DBIO::SQLite::Test> or L<DBIO::Test> with:
+
+  storage_type => 'DBIO::SQLite::Storage'
+
+Shared tests can also exercise the replicated path with:
+
+  replicated   => 1,
+  storage_type => 'DBIO::SQLite::Storage'
+
 =head1 METHODS
 
 =method connection
