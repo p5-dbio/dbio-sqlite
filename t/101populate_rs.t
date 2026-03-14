@@ -199,7 +199,7 @@ ARRAY_CONTEXT: {
   HAS_MANY_WITH_PKS: {
 
     ## This group tests the ability to specify the PK in the parent and let
-    ## DBIC transparently pass the PK down to the Child and also let's the
+    ## DBIO transparently pass the PK down to the Child and also let's the
     ## child create any other needed PK's for itself.
 
     my $aid    =  $art_rs->get_column('artistid')->max || 0;

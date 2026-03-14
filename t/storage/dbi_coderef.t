@@ -6,11 +6,11 @@ use DBIO::SQLite::Test;
 
 plan tests => 1;
 
-# Set up the "usual" sqlite for DBICTest and disconnect
+# Set up the "usual" sqlite for DBIOTest and disconnect
 my $normal_schema = DBIO::SQLite::Test->init_schema( sqlite_use_file => 1 );
 $normal_schema->storage->disconnect;
 
-# Steal the dsn, which should be like 'dbi:SQLite:t/var/DBIxClass.db'
+# Steal the dsn, which should be like 'dbi:SQLite:t/var/DBIO.db'
 my @dsn = ($normal_schema->storage->_dbi_connect_info->[0], undef, undef, {
   RaiseError => 1
 });

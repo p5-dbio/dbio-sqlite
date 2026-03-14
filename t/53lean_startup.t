@@ -8,9 +8,9 @@ my ($initial_inc_contents, $expected_dbic_deps, $require_sites);
 BEGIN {
   # these envvars *will* bring in more stuff than the baseline
   delete @ENV{qw(
-    DBICTEST_SWAPOUT_SQLAC_WITH
-    DBICTEST_SQLT_DEPLOY
-    DBIC_TRACE
+    DBIOTEST_SWAPOUT_SQLAC_WITH
+    DBIOTEST_SQLT_DEPLOY
+    DBIO_TRACE
   )};
 
   # make sure extras do not load even when this is set
@@ -42,7 +42,7 @@ BEGIN {
     push @{$require_sites->{$req}}, "$caller[1] line $caller[2]"
       if @caller;
 
-    return $res if $req =~ /^DBIO|^DBICTest::/;
+    return $res if $req =~ /^DBIO|^DBIOTest::/;
 
     # exclude everything where the current namespace does not match the called function
     # (this works around very weird XS-induced require callstack corruption)
@@ -61,7 +61,7 @@ BEGIN {
       Test::More::fail ("Unexpected require of '$req' by $caller[0] ($caller[1] line $caller[2])");
 
       if ( $ENV{TEST_VERBOSE} or ! $ENV{DBIO_PLAIN_INSTALL} ) {
-        CORE::require('DBICTest/Util.pm');
+        CORE::require('DBIOTest/Util.pm');
         Test::More::diag( 'Require invoked' .  DBIO::Test::Util::stacktrace() );
       }
     }
@@ -83,15 +83,15 @@ BEGIN {
 
   # these envvars *will* bring in more stuff than the baseline
   delete @ENV{qw(
-    DBIC_TRACE
-    DBIC_SHUFFLE_UNORDERED_RESULTSETS
-    DBICTEST_SQLT_DEPLOY
-    DBICTEST_SQLITE_REVERSE_DEFAULT_ORDER
-    DBICTEST_VIA_REPLICATED
-    DBICTEST_DEBUG_CONCURRENCY_LOCKS
+    DBIO_TRACE
+    DBIO_SHUFFLE_UNORDERED_RESULTSETS
+    DBIOTEST_SQLT_DEPLOY
+    DBIOTEST_SQLITE_REVERSE_DEFAULT_ORDER
+    DBIOTEST_VIA_REPLICATED
+    DBIOTEST_DEBUG_CONCURRENCY_LOCKS
   )};
 
-  $ENV{DBICTEST_ANFANG_DEFANG} = 1;
+  $ENV{DBIOTEST_ANFANG_DEFANG} = 1;
 
   # make sure extras do not load even when this is set
   $ENV{PERL_STRICTURES_EXTRA} = 1;
@@ -107,7 +107,7 @@ BEGIN {
 
 BEGIN {
   delete $ENV{$_} for qw(
-    DBICTEST_DEBUG_CONCURRENCY_LOCKS
+    DBIOTEST_DEBUG_CONCURRENCY_LOCKS
   );
 }
 
@@ -185,7 +185,7 @@ sub assert_no_missing_expected_requires {
   for my $mod (keys %$expected_dbic_deps) {
     (my $modfn = "$mod.pm") =~ s/::/\//g;
     unless ($INC{$modfn}) {
-      my $err = sprintf "Expected DBIC core dependency '%s' never loaded - %s needs adjustment", $mod, __FILE__;
+      my $err = sprintf "Expected DBIO core dependency '%s' never loaded - %s needs adjustment", $mod, __FILE__;
       if ($ENV{DBIO_CI} or $ENV{AUTHOR_TESTING}) {
         fail ($err)
       }
@@ -195,7 +195,7 @@ sub assert_no_missing_expected_requires {
       }
     }
   }
-  pass(sprintf 'All modules expected at %s line %s loaded by DBIC: %s',
+  pass(sprintf 'All modules expected at %s line %s loaded by DBIO: %s',
     __FILE__,
     (caller(0))[2],
     join (', ', sort keys %$expected_dbic_deps ),

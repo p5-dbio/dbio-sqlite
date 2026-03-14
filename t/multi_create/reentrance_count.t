@@ -32,7 +32,7 @@ lives_ok (sub {
 
   is ( @{$query_stats->{INSERT} || []}, 3, 'number of inserts during creation of artist with 2 cds' );
   is ( @{$query_stats->{SELECT} || []}, 0, 'number of selects during creation of artist with 2 cds' )
-    || $ENV{DBIC_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
+    || $ENV{DBIO_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
 });
 
 
@@ -56,7 +56,7 @@ lives_ok (sub {
 
   is ( @{$query_stats->{INSERT} || []}, 4, 'number of inserts during creation of artist with 2 cds, converging on the same genre' );
   is ( @{$query_stats->{SELECT} || []}, 0, 'number of selects during creation of artist with 2 cds, converging on the same genre' )
-    || $ENV{DBIC_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
+    || $ENV{DBIO_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
 });
 
 
@@ -81,7 +81,7 @@ lives_ok (sub {
 
   is ( @{$query_stats->{INSERT} || []}, 3, 'number of inserts during creation of artist with 2 cds, converging on the same existing genre' );
   is ( @{$query_stats->{SELECT} || []}, 0, 'number of selects during creation of artist with 2 cds, converging on the same existing genre' )
-    || $ENV{DBIC_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
+    || $ENV{DBIO_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
 });
 
 
@@ -117,7 +117,7 @@ lives_ok (sub {
 
   is ( @{$query_stats->{INSERT} || []}, 6, 'number of inserts during creation of artist->cd->producer->cd->same_artist' );
   is ( @{$query_stats->{SELECT} || []}, 0, 'number of selects during creation of artist->cd->producer->cd->same_artist' )
-    || $ENV{DBIC_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
+    || $ENV{DBIO_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
 });
 
 lives_ok (sub {
@@ -147,7 +147,7 @@ lives_ok (sub {
 
   is ( @{$query_stats->{INSERT} || []}, 4, 'number of inserts during creation of existing_artist->cd->existing_producer->cd->existing_artist2' );
   is ( @{$query_stats->{SELECT} || []}, 0, 'number of selects during creation of existing_artist->cd->existing_producer->cd->existing_artist2' )
-    || $ENV{DBIC_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
+    || $ENV{DBIO_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
 });
 
 lives_ok (sub {
@@ -169,7 +169,7 @@ lives_ok (sub {
 
   is ( @{$query_stats->{INSERT} || []}, 2, 'number of inserts during creation of artist_object->cd->producer_object' );
   is ( @{$query_stats->{SELECT} || []}, 0, 'number of selects during creation of artist_object->cd->producer_object' )
-    || $ENV{DBIC_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
+    || $ENV{DBIO_MULTICREATE_DEBUG} && diag join "\n", @{$query_stats->{SELECT} || []};
 });
 
 done_testing;

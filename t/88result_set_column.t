@@ -8,7 +8,7 @@ use Test::Exception;
 # MASSIVE FIXME - there is a hole in ::RSC / as_subselect_rs
 # losing the order. Needs a rework/extract of the realiaser,
 # and that's a whole another bag of dicks
-BEGIN { $ENV{DBIC_SHUFFLE_UNORDERED_RESULTSETS} = 0 }
+BEGIN { $ENV{DBIO_SHUFFLE_UNORDERED_RESULTSETS} = 0 }
 
 use DBIO::SQLite::Test ':DiffSQL';
 

@@ -13,9 +13,9 @@ for my $type (qw/PG MYSQL SQLite/) {
     my @dsn = $type eq 'SQLite'
       ? DBIO::SQLite::Test->_database(sqlite_use_file => 1)
       : do {
-        skip "Skipping $type tests without DBICTEST_${type}_DSN", 1
-          unless $ENV{"DBICTEST_${type}_DSN"};
-        @ENV{map { "DBICTEST_${type}_${_}" } qw/DSN USER PASS/}
+        skip "Skipping $type tests without DBIOTEST_${type}_DSN", 1
+          unless $ENV{"DBIOTEST_${type}_DSN"};
+        @ENV{map { "DBIOTEST_${type}_${_}" } qw/DSN USER PASS/}
       }
     ;
 
@@ -35,7 +35,7 @@ for my $type (qw/PG MYSQL SQLite/) {
     $DBIO::Test::FakeSchemaFactory::schema = $schema;
 
     # so we can see the retry exceptions (if any)
-    $ENV{DBIC_DBIRETRY_DEBUG} = 1;
+    $ENV{DBIO_DBIRETRY_DEBUG} = 1;
 
     ok (!$schema->storage->connected, "$type: start disconnected");
 

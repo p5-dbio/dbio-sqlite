@@ -3,9 +3,9 @@ use warnings;
 use lib qw(t/lib);
 
 use lib 't/lib';
-use DBICTest::RunMode;
+use DBIOTest::RunMode;
 BEGIN {
-  if( DBICTest::RunMode->is_plain ) {
+  if( DBIOTest::RunMode->is_plain ) {
     print "1..0 # SKIP not running dangerous segfault-prone test on plain install\n";
     exit 0;
   }

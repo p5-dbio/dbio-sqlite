@@ -44,7 +44,7 @@ sub import {
       }
       elsif ($exp eq ':GlobalLock') {
         # GlobalLock is a no-op in the DBIO test suite — the original
-        # DBICTest locking mechanism is not needed outside of the old
+        # DBIOTest locking mechanism is not needed outside of the old
         # concurrent test infrastructure.
       }
       else {
@@ -75,7 +75,7 @@ Returns the path to the file-based test SQLite database.
 
 sub _sqlite_dbfilename {
   my $self = shift;
-  my $holder = $ENV{DBICTEST_LOCK_HOLDER} || $$;
+  my $holder = $ENV{DBIOTEST_LOCK_HOLDER} || $$;
   $holder = $$ if $holder == -1;
   return _vardir() . "/DBIOTest-$holder.db";
 }
@@ -90,7 +90,7 @@ sub _sqlite_dbname {
   my $self = shift;
   my %args = @_;
   return $self->_sqlite_dbfilename if (
-    defined $args{sqlite_use_file} ? $args{sqlite_use_file} : $ENV{'DBICTEST_SQLITE_USE_FILE'}
+    defined $args{sqlite_use_file} ? $args{sqlite_use_file} : $ENV{'DBIOTEST_SQLITE_USE_FILE'}
   );
   return ":memory:";
 }
@@ -106,9 +106,9 @@ sub _database {
   my $self = shift;
   my %args = @_;
 
-  if ($ENV{DBICTEST_DSN}) {
+  if ($ENV{DBIOTEST_DSN}) {
     return (
-      (map { $ENV{"DBICTEST_${_}"} || '' } qw/DSN DBUSER DBPASS/),
+      (map { $ENV{"DBIOTEST_${_}"} || '' } qw/DSN DBUSER DBPASS/),
       { AutoCommit => 1, %args },
     );
   }
@@ -131,7 +131,7 @@ sub _database {
       $dbh->do('PRAGMA synchronous = OFF');
 
       if (
-        $ENV{DBICTEST_SQLITE_REVERSE_DEFAULT_ORDER}
+        $ENV{DBIOTEST_SQLITE_REVERSE_DEFAULT_ORDER}
           and
         $storage->_server_info->{normalized_dbms_version} >= 3.007009
       ) {
@@ -195,11 +195,11 @@ sub init_schema {
 sub _cleanup_dbfile {
   my $self = shift;
   if (
-    ! $ENV{DBICTEST_LOCK_HOLDER}
+    ! $ENV{DBIOTEST_LOCK_HOLDER}
       or
-    $ENV{DBICTEST_LOCK_HOLDER} == -1
+    $ENV{DBIOTEST_LOCK_HOLDER} == -1
       or
-    $ENV{DBICTEST_LOCK_HOLDER} == $$
+    $ENV{DBIOTEST_LOCK_HOLDER} == $$
   ) {
     my $db_file = $self->_sqlite_dbfilename;
     unlink $_ for ($db_file, "${db_file}-journal");

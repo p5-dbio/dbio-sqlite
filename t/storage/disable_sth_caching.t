@@ -9,7 +9,7 @@ use DBIO::SQLite::Test;
 ## They are subject to ongoing change
 ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-# Set up the "usual" sqlite for DBICTest
+# Set up the "usual" sqlite for DBIOTest
 my $schema = DBIO::SQLite::Test->init_schema();
 my $dbh = $schema->storage->_get_dbh;
 

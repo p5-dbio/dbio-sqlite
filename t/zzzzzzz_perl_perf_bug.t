@@ -4,12 +4,12 @@ use lib qw(t/lib);
 use Test::More;
 BEGIN {
   plan skip_all =>
-    'Skipping RH perl performance bug tests as DBIC_NO_WARN_BAD_PERL set'
-    if ( $ENV{DBIC_NO_WARN_BAD_PERL} );
+    'Skipping RH perl performance bug tests as DBIO_NO_WARN_BAD_PERL set'
+    if ( $ENV{DBIO_NO_WARN_BAD_PERL} );
 
-  require DBICTest::RunMode;
+  require DBIOTest::RunMode;
   plan skip_all => 'Skipping as system appears to be a smoker'
-    if DBICTest::RunMode->is_smoker;
+    if DBIOTest::RunMode->is_smoker;
 }
 
 # globalllock so that the test runs alone
@@ -24,7 +24,7 @@ use Benchmark;
 #  2. If so we do a performance test for the effect of
 #     that bug.
 #
-# You can skip these tests by setting the DBIC_NO_WARN_BAD_PERL env
+# You can skip these tests by setting the DBIO_NO_WARN_BAD_PERL env
 # variable
 #
 # If these tests fail then please read the section titled

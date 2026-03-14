@@ -9,7 +9,7 @@ BEGIN {
       unless DBIO::Optional::Dependencies->req_ok_for ('test_prettydebug');
 }
 
-BEGIN { delete @ENV{qw(DBIC_TRACE_PROFILE)} }
+BEGIN { delete @ENV{qw(DBIO_TRACE_PROFILE)} }
 
 {
    my $schema = DBIO::SQLite::Test->init_schema();
@@ -18,7 +18,7 @@ BEGIN { delete @ENV{qw(DBIC_TRACE_PROFILE)} }
 }
 
 {
-   local $ENV{DBIC_TRACE_PROFILE} = 'console';
+   local $ENV{DBIO_TRACE_PROFILE} = 'console';
 
    my $schema = DBIO::SQLite::Test->init_schema();
 
@@ -27,7 +27,7 @@ BEGIN { delete @ENV{qw(DBIC_TRACE_PROFILE)} }
 }
 
 {
-   local $ENV{DBIC_TRACE_PROFILE} = './t/lib/awesome.json';
+   local $ENV{DBIO_TRACE_PROFILE} = './t/lib/awesome.json';
 
    my $schema = DBIO::SQLite::Test->init_schema();
 

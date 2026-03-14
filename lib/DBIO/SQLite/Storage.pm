@@ -139,12 +139,12 @@ sub _ping {
 
   # older DBD::SQLite does not properly synchronize commit state between
   # the libsqlite and the $dbh
-  unless (defined $DBD::SQLite::__DBIC_TXN_SYNC_SANE__) {
-    $DBD::SQLite::__DBIC_TXN_SYNC_SANE__ = modver_gt_or_eq('DBD::SQLite', '1.38_02');
+  unless (defined $DBD::SQLite::__DBIO_TXN_SYNC_SANE__) {
+    $DBD::SQLite::__DBIO_TXN_SYNC_SANE__ = modver_gt_or_eq('DBD::SQLite', '1.38_02');
   }
 
   # fallback to travesty
-  unless ($DBD::SQLite::__DBIC_TXN_SYNC_SANE__) {
+  unless ($DBD::SQLite::__DBIO_TXN_SYNC_SANE__) {
     # since we do not have access to sqlite3_get_autocommit(), do a trick
     # to attempt to *safely* determine what state are we *actually* in.
     # FIXME
@@ -268,9 +268,9 @@ sub _dbh_execute {
       DBIO::_ENV_::OS_NAME eq 'MSWin32'
     )
       and
-    ! defined $DBD::SQLite::__DBIC_CHECK_dbd_mishandles_bound_BIGINT
+    ! defined $DBD::SQLite::__DBIO_CHECK_dbd_mishandles_bound_BIGINT
   ) {
-    $DBD::SQLite::__DBIC_CHECK_dbd_mishandles_bound_BIGINT = (
+    $DBD::SQLite::__DBIO_CHECK_dbd_mishandles_bound_BIGINT = (
       modver_gt_or_eq('DBD::SQLite', '1.37')
     ) ? 1 : 0;
   }
@@ -288,7 +288,7 @@ sub _dbh_execute {
       DBIO::_ENV_::OS_NAME eq 'MSWin32'
     )
       and
-    $DBD::SQLite::__DBIC_CHECK_dbd_mishandles_bound_BIGINT
+    $DBD::SQLite::__DBIO_CHECK_dbd_mishandles_bound_BIGINT
   );
 
   shift->next::method(@_);
@@ -308,8 +308,8 @@ sub _dbi_attrs_for_bind {
 
   my $bindattrs = $self->next::method($ident, $bind);
 
-  if (! defined $DBD::SQLite::__DBIC_CHECK_dbd_can_bind_bigint_values) {
-    $DBD::SQLite::__DBIC_CHECK_dbd_can_bind_bigint_values
+  if (! defined $DBD::SQLite::__DBIO_CHECK_dbd_can_bind_bigint_values) {
+    $DBD::SQLite::__DBIO_CHECK_dbd_can_bind_bigint_values
       = modver_gt_or_eq('DBD::SQLite', '1.37') ? 1 : 0;
   }
 
@@ -332,7 +332,7 @@ sub _dbi_attrs_for_bind {
           undef $bindattrs->[$i];
         }
         elsif (
-          ! $DBD::SQLite::__DBIC_CHECK_dbd_can_bind_bigint_values
+          ! $DBD::SQLite::__DBIO_CHECK_dbd_can_bind_bigint_values
         ) {
           if ($bind->[$i][1] > 0x7fff_ffff or $bind->[$i][1] < -0x8000_0000) {
             carp_unique( sprintf (

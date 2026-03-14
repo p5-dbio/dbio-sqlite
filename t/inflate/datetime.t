@@ -6,7 +6,7 @@ use Test::Warn;
 use Try::Tiny;
 use DBIO::SQLite::Test;
 # so user's env doesn't screw us
-delete $ENV{DBIC_DT_SEARCH_OK};
+delete $ENV{DBIO_DT_SEARCH_OK};
 
 my $schema = DBIO::SQLite::Test->init_schema();
 
@@ -27,7 +27,7 @@ my $dt_warn_re = qr/DateTime objects.+not supported properly/;
 my $row;
 
 {
-  local $ENV{DBIC_DT_SEARCH_OK} = 1;
+  local $ENV{DBIO_DT_SEARCH_OK} = 1;
   local $SIG{__WARN__} = sub {
     fail('Disabled warning still issued') if $_[0] =~ $dt_warn_re;
     warn @_;
@@ -46,7 +46,7 @@ warnings_exist {
 
   is(eval { $row->id }, 1, 'DT in search');
 
-  local $ENV{DBIC_DT_SEARCH_OK} = 1;
+  local $ENV{DBIO_DT_SEARCH_OK} = 1;
 
   ok($row =
     $schema->resultset('Event')->search({ starts_at => { '>=' => $starts } })

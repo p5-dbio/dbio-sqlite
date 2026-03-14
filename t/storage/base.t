@@ -148,7 +148,7 @@ my $invocations = {
 };
 
 for my $type (keys %$invocations) {
-  local $ENV{DBIC_UNSAFE_AUTOCOMMIT_OK};
+  local $ENV{DBIO_UNSAFE_AUTOCOMMIT_OK};
 
   # we can not use a cloner portably because of the coderef
   # so compare dumps instead
@@ -169,7 +169,7 @@ for my $type (keys %$invocations) {
   is_deeply (
     [$storage->on_connect_do, $storage->on_disconnect_do ],
     [ [qw/a b c/], [qw/d e f/] ],
-    "$type correctly parsed DBIC specific on_[dis]connect_do",
+    "$type correctly parsed DBIO specific on_[dis]connect_do",
   );
 }
 
@@ -177,7 +177,7 @@ for my $type (keys %$invocations) {
 # but work with ENV at the same time
 SKIP: for my $env_dsn (undef, (DBIO::SQLite::Test->_database)[0] ) {
   skip( 'Subtest relies on being connected to SQLite without overrides', 1 ) if (
-    $ENV{DBICTEST_SWAPOUT_SQLAC_WITH}
+    $ENV{DBIOTEST_SWAPOUT_SQLAC_WITH}
       or
     ( $env_dsn and $env_dsn !~ /\:SQLite\:/ )
   );

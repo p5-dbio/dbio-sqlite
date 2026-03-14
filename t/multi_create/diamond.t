@@ -4,7 +4,7 @@ use warnings;
 use Test::More;
 use Test::Exception;
 use DBIO::SQLite::Test;
-sub mc_diag { diag (@_) if $ENV{DBIC_MULTICREATE_DEBUG} };
+sub mc_diag { diag (@_) if $ENV{DBIO_MULTICREATE_DEBUG} };
 
 my $schema = DBIO::SQLite::Test->init_schema();
 

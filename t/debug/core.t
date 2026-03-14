@@ -9,7 +9,7 @@ use File::Spec;
 use DBIO::SQLite::Test;
 use DBIO::Util qw(file_path slurp_file);
 
-BEGIN { delete @ENV{qw(DBIC_TRACE DBIC_TRACE_PROFILE DBICTEST_SQLITE_USE_FILE)} }
+BEGIN { delete @ENV{qw(DBIO_TRACE DBIO_TRACE_PROFILE DBIOTEST_SQLITE_USE_FILE)} }
 
 my $schema = DBIO::SQLite::Test->init_schema();
 
@@ -34,7 +34,7 @@ like($loglines[0], qr/^SELECT COUNT/, 'File log via debugfh success');
 $schema->storage->debugfh(undef);
 
 {
-  local $ENV{DBIC_TRACE} = "=$lfn";
+  local $ENV{DBIO_TRACE} = "=$lfn";
   unlink $lfn;
 
   $schema->resultset('CD')->count;
@@ -145,7 +145,7 @@ is_deeply(\@warnings, [], 'No warnings with unicode on STDERR');
   my $output = "";
 
   {
-    package DBICTest::_Printable;
+    package DBIOTest::_Printable;
 
     sub print {
       my ($self, @args) = @_;
@@ -155,7 +155,7 @@ is_deeply(\@warnings, [], 'No warnings with unicode on STDERR');
 
   $schema->storage->debugobj(undef);
   $schema->storage->debug(1);
-  $schema->storage->debugfh( bless {}, "DBICTest::_Printable" );
+  $schema->storage->debugfh( bless {}, "DBIOTest::_Printable" );
   $schema->storage->txn_do( sub { $schema->resultset('Artist')->count } );
 
   like (

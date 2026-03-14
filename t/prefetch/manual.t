@@ -6,7 +6,7 @@ use Test::Deep;
 use Test::Warn;
 use Test::Exception;
 use DBIO::SQLite::Test;
-delete $ENV{DBIC_COLUMNS_INCLUDE_FILTER_RELS};
+delete $ENV{DBIO_COLUMNS_INCLUDE_FILTER_RELS};
 
 my $schema = DBIO::SQLite::Test->init_schema(no_populate => 1);
 

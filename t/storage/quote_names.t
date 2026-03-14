@@ -4,7 +4,7 @@ use lib qw(t/lib);
 use Test::More;
 use Data::Dumper::Concise;
 use Try::Tiny;
-use DBICTest::RunMode;
+use DBIOTest::RunMode;
 use DBIO::SQLite::Test;
 
 my %expected = (
@@ -63,7 +63,7 @@ for my $class (keys %expected) { SKIP: {
 
 # Env var to base class mapping, these are the DBs I actually have.
 # the SQLITE is a fake memory dsn
-local $ENV{DBICTEST_SQLITE_DSN} = 'dbi:SQLite::memory:';
+local $ENV{DBIOTEST_SQLITE_DSN} = 'dbi:SQLite::memory:';
 my %dbs = (
   SQLITE           => 'DBIO::SQLite::Storage',
   ORA              => 'DBIO::Oracle::Storage',
@@ -79,8 +79,8 @@ my %dbs = (
 
 # lie that we already locked stuff - the tests below do not touch anything
 # unless we are under travis, where the OOM killers reign and things are rough
-$ENV{DBICTEST_LOCK_HOLDER} = -1
-  unless DBICTest::RunMode->is_ci;
+$ENV{DBIOTEST_LOCK_HOLDER} = -1
+  unless DBIOTest::RunMode->is_ci;
 
 # Make sure oracle is tried last - some clients (e.g. 10.2) have symbol
 # clashes with libssl, and will segfault everything coming after them
@@ -89,7 +89,7 @@ for my $db (sort {
   : $b eq 'ORA' ? -1
   : $a cmp $b
 } keys %dbs) {
-  my ($dsn, $user, $pass) = map $ENV{"DBICTEST_${db}_$_"}, qw/DSN USER PASS/;
+  my ($dsn, $user, $pass) = map $ENV{"DBIOTEST_${db}_$_"}, qw/DSN USER PASS/;
 
   next unless $dsn;
 

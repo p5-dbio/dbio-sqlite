@@ -1,11 +1,11 @@
 # work around brain damage in PPerl (yes, it has to be a global)
 $SIG{__WARN__} = sub {
   warn @_ unless $_[0] =~ /\QUse of "goto" to jump into a construct is deprecated/
-} if ($ENV{DBICTEST_IN_PERSISTENT_ENV});
+} if ($ENV{DBIOTEST_IN_PERSISTENT_ENV});
 
 # the persistent environments run with this flag first to see if
 # we will run at all (e.g. it will fail if $^X doesn't match)
-exit 0 if $ENV{DBICTEST_PERSISTENT_ENV_BAIL_EARLY};
+exit 0 if $ENV{DBIOTEST_PERSISTENT_ENV_BAIL_EARLY};
 
 # Do the override as early as possible so that CORE::bless doesn't get compiled away
 # We will replace $bless_override only if we are in author mode
@@ -22,8 +22,8 @@ use warnings;
 use lib qw(t/lib);
 use Test::More;
 
-use DBICTest::RunMode;
-use DBICTest::Util::LeakTracer qw(populate_weakregistry assert_empty_weakregistry visit_refs);
+use DBIOTest::RunMode;
+use DBIOTest::Util::LeakTracer qw(populate_weakregistry assert_empty_weakregistry visit_refs);
 use Scalar::Util qw(weaken blessed reftype);
 use DBIO::Util qw(hrefaddr sigwarn_silencer modver_gt_or_eq modver_gt_or_eq_and_lt);
 BEGIN {
@@ -33,7 +33,7 @@ BEGIN {
 
 
 my $TB = Test::More->builder;
-if ($ENV{DBICTEST_IN_PERSISTENT_ENV}) {
+if ($ENV{DBIOTEST_IN_PERSISTENT_ENV}) {
   # without this explicit close TB warns in END after a ->reset
   close ($TB->$_) for qw(output failure_output todo_output);
 
@@ -55,7 +55,7 @@ my $weak_registry = {};
 my $has_dt;
 
 # Skip the heavy-duty leak tracing when just doing an install
-unless (DBICTest::RunMode->is_plain) {
+unless (DBIOTest::RunMode->is_plain) {
 
   # redefine the bless override so that we can catch each and every object created
   no warnings qw/redefine once/;
@@ -67,7 +67,7 @@ unless (DBICTest::RunMode->is_plain) {
       $_[0], (@_ > 1) ? $_[1] : do {
         my ($class, $fn, $line) = caller();
         fail ("bless() of $_[0] into $class without explicit class specification at $fn line $line")
-          if $class =~ /^ (?: DBIx\:\:Class | DBICTest ) /x;
+          if $class =~ /^ (?: DBIx\:\:Class | DBIOTest ) /x;
         $class;
       }
     );
@@ -260,7 +260,7 @@ unless (DBICTest::RunMode->is_plain) {
 
 
   my $fire_resultsets = sub {
-    local $ENV{DBIC_COLUMNS_INCLUDE_FILTER_RELS} = 1;
+    local $ENV{DBIO_COLUMNS_INCLUDE_FILTER_RELS} = 1;
     local $SIG{__WARN__} = sigwarn_silencer(
       qr/Unable to deflate 'filter'-type relationship 'artist'.+related object primary key not retrieved/
     );
@@ -307,9 +307,9 @@ unless (DBICTest::RunMode->is_plain) {
   #
   # Some elaborate SQLAC-replacements leak, do not worry about it for now
   if (
-    DBICTest::Util::LeakTracer::CV_TRACING
+    DBIOTest::Util::LeakTracer::CV_TRACING
       and
-    ! $ENV{DBICTEST_SWAPOUT_SQLAC_WITH}
+    ! $ENV{DBIOTEST_SWAPOUT_SQLAC_WITH}
   ) {
     visit_refs(
       refs => [ $base_collection ],
@@ -323,9 +323,9 @@ unless (DBICTest::RunMode->is_plain) {
     # this is expensive - not running on install
     my $typecounts = {};
     if (
-      ! DBICTest::RunMode->is_plain
+      ! DBIOTest::RunMode->is_plain
         and
-      ! $ENV{DBICTEST_IN_PERSISTENT_ENV}
+      ! $ENV{DBIOTEST_IN_PERSISTENT_ENV}
     ) {
 
       # FIXME - ideally we should be able to just populate an alternative
@@ -457,7 +457,7 @@ for my $addr (keys %$weak_registry) {
     # there is one tied lexical which stays alive until GC time
     # https://metacpan.org/source/ETHER/B-Hooks-EndOfScope-0.15/lib/B/Hooks/EndOfScope/PP/FieldHash.pm#L24
     # simply ignore it here, instead of teaching the leaktracer to examine ties
-    # the latter is possible yet terrible: https://metacpan.org/source/RIBASUSHI/DBIO-0.082840/t/lib/DBICTest/Util/LeakTracer.pm#L113-117
+    # the latter is possible yet terrible: https://metacpan.org/source/RIBASUSHI/DBIO-0.082840/t/lib/DBIOTest/Util/LeakTracer.pm#L113-117
     delete $weak_registry->{$addr}
       unless $cleared->{bheos_pptiehinthashfieldhash}++;
   }
@@ -471,7 +471,7 @@ for my $addr (keys %$weak_registry) {
   }
   elsif (
 #    # if we can look at closed over pieces - we will register it as a global
-#    !DBICTest::Util::LeakTracer::CV_TRACING
+#    !DBIOTest::Util::LeakTracer::CV_TRACING
 #      and
     $names =~ /^SQL::Translator::Generator::DDL::SQLite/m
   ) {
@@ -533,7 +533,7 @@ assert_empty_weakregistry ($weak_registry);
 my $persistence_tests;
 SKIP: {
   skip 'Test already in a persistent loop', 1
-    if $ENV{DBICTEST_IN_PERSISTENT_ENV};
+    if $ENV{DBIOTEST_IN_PERSISTENT_ENV};
 
   skip 'Main test failed - skipping persistent env tests', 1
     unless $TB->is_passing;
@@ -541,7 +541,7 @@ SKIP: {
   skip "Test::Builder\@@{[ Test::Builder->VERSION ]} known to break persistence tests", 1
     if modver_gt_or_eq_and_lt( 'Test::More', '1.200', '1.301001_099' );
 
-  local $ENV{DBICTEST_IN_PERSISTENT_ENV} = 1;
+  local $ENV{DBIOTEST_IN_PERSISTENT_ENV} = 1;
 
   $persistence_tests = {
     PPerl => {
@@ -583,7 +583,7 @@ SKIP: {
 
     # since PPerl is racy and sucks - just prime the "server"
     {
-      local $ENV{DBICTEST_PERSISTENT_ENV_BAIL_EARLY} = 1;
+      local $ENV{DBIOTEST_PERSISTENT_ENV_BAIL_EARLY} = 1;
       system(@cmd);
       sleep 1;
 

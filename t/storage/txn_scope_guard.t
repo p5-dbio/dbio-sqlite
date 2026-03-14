@@ -5,7 +5,7 @@ use lib qw(t/lib);
 use Test::More;
 use Test::Warn;
 use Test::Exception;
-use DBICTest::RunMode;
+use DBIOTest::RunMode;
 use DBIO::SQLite::Test;
 
 # Test txn_scope_guard
@@ -205,7 +205,7 @@ for my $post_poison (0,1) {
   local $TODO = 'Do not know how to deal with trapped exceptions occuring after guard instantiation...'
     if ( $post_poison and (
       # take no chances on installation
-      ( DBICTest::RunMode->is_plain and ($ENV{TRAVIS}||'') ne 'true' )
+      ( DBIOTest::RunMode->is_plain and ($ENV{TRAVIS}||'') ne 'true' )
         or
       # this always fails
       ! $pre_poison
@@ -223,8 +223,8 @@ for my $post_poison (0,1) {
 # add a TODO to catch when Text::Balanced is finally fixed
 # https://rt.cpan.org/Public/Bug/Display.html?id=74994
 #
-# while it doesn't matter much for DBIC itself, this particular bug
-# is a *BANE*, and DBIC is to bump its dep as soon as possible
+# while it doesn't matter much for DBIO itself, this particular bug
+# is a *BANE*, and DBIO is to bump its dep as soon as possible
 {
 
   require Text::Balanced;

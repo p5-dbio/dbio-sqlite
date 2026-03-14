@@ -4,7 +4,7 @@ use warnings;
 use Test::More;
 use Test::Exception;
 use DBIO::SQLite::Test;
-my $no_class = '_DBICTEST_NONEXISTENT_CLASS_';
+my $no_class = '_DBIOTEST_NONEXISTENT_CLASS_';
 
 my $schema = DBIO::SQLite::Test->init_schema();
 $schema->storage->datetime_parser_type($no_class);

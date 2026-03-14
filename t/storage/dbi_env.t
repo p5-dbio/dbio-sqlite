@@ -7,7 +7,7 @@ use DBIO::Util 'sigwarn_silencer';
 
 BEGIN { delete @ENV{qw(DBI_DSN DBI_DRIVER)} }
 
-$ENV{DBICTEST_LOCK_HOLDER} = -1;
+$ENV{DBIOTEST_LOCK_HOLDER} = -1;
 
 # pre-populate
 my $schema = DBIO::SQLite::Test->init_schema(sqlite_use_file => 1);
@@ -19,7 +19,7 @@ sub count_sheep {
 
     local $SIG{__WARN__} = sigwarn_silencer(
       qr/
-        \QThis version of DBIC does not yet seem to supply a driver for your particular RDBMS\E
+        \QThis version of DBIO does not yet seem to supply a driver for your particular RDBMS\E
           |
         \QUnable to extract a driver name from connect info\E
           |
