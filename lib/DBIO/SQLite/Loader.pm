@@ -11,6 +11,9 @@ use DBIO::Loader::Table ();
 
 See L<DBIO::Loader> and L<DBIO::Loader::Base>.
 
+This module was ported from the historical
+L<DBIx::Class::Schema::Loader::DBI::SQLite>.
+
 =head1 METHODS
 
 =head2 rescan
