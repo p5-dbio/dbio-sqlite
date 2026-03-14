@@ -6,6 +6,8 @@ my @modules = qw(
   DBIO::SQLite
   DBIO::SQLite::Storage
   DBIO::SQLite::SQLMaker
+  DBIO::SQLite::Loader
+  DBIO::SQLite::Test
 );
 
 plan tests => scalar @modules;

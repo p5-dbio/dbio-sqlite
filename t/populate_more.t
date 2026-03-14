@@ -15,8 +15,7 @@ use Test::Exception;
 }
 
 use DBIO::SQLite::Test;
-use Path::Class::File;
-use File::Spec;
+use DBIO::Util qw(file_path parent_dir);
 
 # Deploy with our own schema class
 my $db_file = ':memory:';
@@ -25,7 +24,7 @@ my $schema = PopulateMoreTest::Schema->connect("dbi:SQLite:$db_file", '', '', { 
 # Deploy the tables we need
 $schema->storage->dbh_do(sub {
   my ($storage, $dbh) = @_;
-  my $sql_file = Path::Class::File->new(__FILE__)->dir->file('lib/sqlite.sql')->stringify;
+  my $sql_file = file_path(parent_dir(__FILE__), 'lib', 'sqlite.sql');
   my $sql = do { local (@ARGV, $/) = $sql_file; <> };
   for my $chunk (split(/;\s*\n+/, $sql)) {
     if ($chunk =~ /^\s*(?!--\s*)\S/m) {

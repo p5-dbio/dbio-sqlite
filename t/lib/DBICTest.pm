@@ -39,8 +39,8 @@ use DBICTest::Schema;
 use DBICTest::Util::LeakTracer qw/populate_weakregistry assert_empty_weakregistry/;
 use DBIO::Util 'detected_reinvoked_destructor';
 use Carp;
-use Path::Class::File ();
 use File::Spec;
+use DBIO::Util qw(dir_path file_path parent_dir mkpath slurp_file);
 use Fcntl qw/:DEFAULT :flock/;
 use Config;
 use Scope::Guard ();
@@ -111,7 +111,7 @@ our ($global_lock_fh, $global_exclusive_lock);
 sub import {
     my $self = shift;
 
-    my $lockpath = DBICTest::RunMode->tmpdir->file('_dbictest_global.lock');
+    my $lockpath = file_path(DBICTest::RunMode->tmpdir, '_dbictest_global.lock');
 
     {
       my $u = local_umask(0); # so that the file opens as 666, and any user can lock
@@ -166,9 +166,8 @@ END {
 }
 
 {
-    my $dir = Path::Class::File->new(__FILE__)->dir->parent->subdir('var');
-    $dir->mkpath unless -d "$dir";
-    $dir = "$dir";
+    my $dir = dir_path(parent_dir(parent_dir(__FILE__)), 'var');
+    mkpath($dir) unless -d $dir;
 
     sub _sqlite_dbfilename {
         my $holder = $ENV{DBICTEST_LOCK_HOLDER} || $$;
@@ -428,8 +427,7 @@ sub deploy_schema {
     if ($ENV{"DBICTEST_SQLT_DEPLOY"}) {
         $schema->deploy($args);
     } else {
-        my $filename = Path::Class::File->new(__FILE__)->dir
-          ->file('sqlite.sql')->stringify;
+        my $filename = file_path(parent_dir(__FILE__), 'sqlite.sql');
         my $sql = do { local (@ARGV, $/) = $filename ; <> };
         for my $chunk ( split (/;\s*\n+/, $sql) ) {
           if ( $chunk =~ / ^ (?! --\s* ) \S /xm ) {  # there is some real sql in the chunk - a non-space at the start of the string which is not a comment

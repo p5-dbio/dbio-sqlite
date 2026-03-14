@@ -7,17 +7,13 @@ use Test::Exception;
 use Try::Tiny;
 use File::Spec;
 use DBIO::SQLite::Test;
-use Path::Class qw/file/;
-
-# something deep in Path::Class - mainline ditched it altogether
-plan skip_all => "Test is finicky under -T before 5.10"
-  if "$]" < 5.010 and ${^TAINT};
+use DBIO::Util qw(file_path slurp_file);
 
 BEGIN { delete @ENV{qw(DBIC_TRACE DBIC_TRACE_PROFILE DBICTEST_SQLITE_USE_FILE)} }
 
 my $schema = DBIO::SQLite::Test->init_schema();
 
-my $lfn = file("t/var/sql-$$.log");
+my $lfn = file_path("t", "var", "sql-$$.log");
 unlink $lfn or die $!
   if -e $lfn;
 
@@ -26,11 +22,12 @@ require DBIO::Storage::Statistics;
 $schema->storage->debugobj(DBIO::Storage::Statistics->new);
 
 ok ( $schema->storage->debug(1), 'debug' );
-$schema->storage->debugfh($lfn->openw);
+open my $logfh, '>', $lfn or die "Cannot open $lfn: $!";
+$schema->storage->debugfh($logfh);
 $schema->storage->debugfh->autoflush(1);
 $schema->resultset('CD')->count;
 
-my @loglines = $lfn->slurp;
+my @loglines = slurp_file($lfn);
 is (@loglines, 1, 'one line of log');
 like($loglines[0], qr/^SELECT COUNT/, 'File log via debugfh success');
 
@@ -45,7 +42,7 @@ $schema->storage->debugfh(undef);
   my $schema2 = DBIO::SQLite::Test->init_schema(no_deploy => 1);
   $schema2->storage->_do_query('SELECT 1'); # _do_query() logs via standard mechanisms
 
-  my @loglines = $lfn->slurp;
+  my @loglines = slurp_file($lfn);
   is(@loglines, 2, '2 lines of log');
   like($loglines[0], qr/^SELECT COUNT/, 'Env log from schema1 success');
   like($loglines[1], qr/^SELECT 1:/, 'Env log from schema2 success');

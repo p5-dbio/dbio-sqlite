@@ -7,8 +7,7 @@ use warnings;
 use DBIO::Test;
 use DBIO::Test::Schema;
 use Carp;
-use Path::Class::File ();
-use File::Spec;
+use DBIO::Util qw(dir_path parent_dir mkpath);
 
 =head1 DESCRIPTION
 
@@ -59,10 +58,11 @@ sub import {
   my $dir;
   sub _vardir {
     return $dir if $dir;
-    $dir = Path::Class::File->new(__FILE__)->dir->parent->parent->parent
-      ->parent->subdir('t', 'var');
-    $dir->mkpath unless -d "$dir";
-    $dir = "$dir";
+    $dir = dir_path(
+      parent_dir(parent_dir(parent_dir(parent_dir(__FILE__)))),
+      't', 'var',
+    );
+    mkpath($dir) unless -d $dir;
     return $dir;
   }
 }

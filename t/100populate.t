@@ -6,7 +6,7 @@ use Test::Exception;
 use Test::Warn;
 use DBIO::SQLite::Test;
 use DBIO::Util 'sigwarn_silencer';
-use Path::Class::File ();
+use DBIO::Util qw(file_path);
 use Math::BigInt;
 use List::Util qw/shuffle/;
 use Storable qw/nfreeze dclone/;
@@ -388,8 +388,8 @@ warnings_like {
 
   # the stringification has nothing to do with the artist name
   # this is solely for testing consistency
-  my $fn = Path::Class::File->new ('somedir/somefilename.tmp');
-  my $fn2 = Path::Class::File->new ('somedir/someotherfilename.tmp');
+  my $fn = file_path('somedir', 'somefilename.tmp');
+  my $fn2 = file_path('somedir', 'someotherfilename.tmp');
   my $rank = Math::BigInt->new(42);
 
   my $args = {

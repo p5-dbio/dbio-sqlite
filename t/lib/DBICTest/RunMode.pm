@@ -30,11 +30,11 @@ BEGIN {
   delete $ENV{DBICDEVREL_SWAPOUT_SQLAC_WITH};
 }
 
-use Path::Class qw/file dir/;
 use Fcntl ':DEFAULT';
 use File::Spec ();
 use File::Temp ();
 use DBICTest::Util 'local_umask';
+use DBIO::Util qw(dir_path file_path parent_dir mkpath);
 
 _check_author_makefile() unless $ENV{DBICTEST_NO_MAKEFILE_VERIFICATION};
 
@@ -44,10 +44,10 @@ _check_author_makefile() unless $ENV{DBICTEST_NO_MAKEFILE_VERIFICATION};
 # https://rt.cpan.org/Ticket/Display.html?id=76663
 my $tmpdir;
 sub tmpdir {
-  dir ($tmpdir ||= do {
+  $tmpdir ||= do {
 
     # works but not always
-    my $dir = dir(File::Spec->tmpdir);
+    my $dir = File::Spec->tmpdir;
     my $reason_dir_unusable;
 
     my @parts = File::Spec->splitdir($dir);
@@ -93,15 +93,15 @@ EOE
       # Replace with our local project tmpdir. This will make multiple runs
       # from different runs conflict with each other, but is much better than
       # polluting the root dir with random crap or failing outright
-      my $local_dir = _find_co_root()->subdir('t')->subdir('var');
-      $local_dir->mkpath;
+      my $local_dir = dir_path(_find_co_root(), 't', 'var');
+      mkpath($local_dir);
 
       warn "\n\nUsing '$local_dir' as test scratch-dir instead of '$dir': $reason_dir_unusable\n";
       $dir = $local_dir;
     }
 
-    $dir->stringify;
-  });
+    $dir;
+  };
 }
 
 
@@ -127,11 +127,11 @@ sub _check_author_makefile {
   my $root = _find_co_root()
     or return;
 
-  my $optdeps = file('lib/DBIO/Optional/Dependencies.pm');
+  my $optdeps = file_path('lib', 'DBIO', 'Optional', 'Dependencies.pm');
 
   # not using file->stat as it invokes File::stat which in turn breaks stat(_)
   my ($mf_pl_mtime, $mf_mtime, $optdeps_mtime) = ( map
-    { (stat ($root->file ($_)) )[9] || undef }  # stat returns () on nonexistent files
+    { (stat (file_path($root, $_)) )[9] || undef }  # stat returns () on nonexistent files
     (qw|Makefile.PL  Makefile|, $optdeps)
   );
 
@@ -139,7 +139,7 @@ sub _check_author_makefile {
 
   my @fail_reasons;
 
-  if(not -d $root->subdir ('inc')) {
+  if(not -d dir_path($root, 'inc')) {
     push @fail_reasons, "Missing ./inc directory";
   }
 
@@ -208,9 +208,9 @@ sub is_author {
     or return undef;
 
   return (
-    ( not -d $root->subdir ('inc') )
+    ( not -d dir_path($root, 'inc') )
       or
-    ( -e $root->subdir ('inc')->subdir ($^O eq 'VMS' ? '_author' : '.author') )
+    ( -e dir_path($root, 'inc', $^O eq 'VMS' ? '_author' : '.author') )
   );
 }
 
@@ -247,12 +247,12 @@ sub _find_co_root {
     #  - get the file name of this particular module
     #  - do 'cd ..' as many times as necessary to get to t/lib/../..
 
-    my $root = dir ($INC{$rel_path});
+    my $root = $INC{$rel_path};
     for (1 .. @mod_parts + 2) {
-        $root = $root->parent;
+        $root = parent_dir($root);
     }
 
-    return (-f $root->file ('Makefile.PL') )
+    return (-f file_path($root, 'Makefile.PL') )
       ? $root
       : undef
     ;
