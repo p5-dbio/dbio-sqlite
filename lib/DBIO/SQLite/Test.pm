@@ -159,11 +159,16 @@ Use a file-based SQLite database instead of C<:memory:>.
 
 =back
 
+Shared L<DBIO::Test> options such as C<replicated =E<gt> 1> are normalized
+before the SQLite-specific connection is built, so driver tests can opt
+into replicated coverage without rebuilding their schema setup.
+
 =cut
 
 sub init_schema {
   my $self = shift;
   my %args = @_;
+  %args = %{ DBIO::Test->normalize_init_schema_args(\%args) };
 
   my $schema;
 
@@ -181,6 +186,10 @@ sub init_schema {
 
   if (!$args{no_connect}) {
     $schema = $schema->connect($self->_database(%args));
+
+    if ($args{replicant_connect_info} && $schema->storage->isa('DBIO::Replicated::Storage')) {
+      $schema->storage->connect_replicants(@{ $args{replicant_connect_info} });
+    }
   }
 
   if (!$args{no_deploy}) {
