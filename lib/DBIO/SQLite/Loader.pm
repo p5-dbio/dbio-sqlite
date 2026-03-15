@@ -9,20 +9,21 @@ use DBIO::Loader::Table ();
 
 =head1 DESCRIPTION
 
-See L<DBIO::Loader> and L<DBIO::Loader::Base>.
+This is the SQLite-specific Loader implementation used by L<DBIO::Loader>. It
+extends the generic DBI loader with SQLite-specific introspection for PRAGMA
+metadata, foreign keys, and the reconnect-heavy C<rescan> workflow.
 
-This module was ported from the historical
-L<DBIx::Class::Schema::Loader::DBI::SQLite>.
+For the public loader interface, see L<DBIO::Loader> and
+L<DBIO::Loader::Base>.
 
 =head1 METHODS
 
 =head2 rescan
 
-SQLite will fail all further commands on a connection if the underlying schema
-has been modified.  Therefore, any runtime changes requiring C<rescan> also
-require us to re-connect to the database.  The C<rescan> method here handles
-that reconnection for you, but beware that this must occur for any other open
-sqlite connections as well.
+SQLite rejects further commands on a connection once the underlying schema has
+changed. That means any runtime change requiring C<rescan> also requires a
+fresh connection. This method performs that reconnect for the current schema,
+but any other open SQLite connections must be refreshed separately as well.
 
 =cut
 
