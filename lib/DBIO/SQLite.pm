@@ -17,11 +17,11 @@ use base 'DBIO';
 
 =head1 DESCRIPTION
 
-L<DBIO::SQLite> is the SQLite driver distribution for DBIO.
+L<DBIO::SQLite> is the SQLite driver component for DBIO.
 
 When this component is loaded into a schema class, C<connection()> sets
-L<DBIO::Schema/storage_type> to C<+DBIO::SQLite::Storage>, enabling
-SQLite-specific storage behavior.
+L<DBIO::Schema/storage_type> to C<+DBIO::SQLite::Storage>, which enables
+SQLite-specific storage behavior automatically.
 
 =head1 MIGRATION NOTES
 
