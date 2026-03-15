@@ -1,6 +1,15 @@
 Revision history for DBIO-SQLite
 
 {{$NEXT}}
-    - Add module POD for DBIO::SQLite
-    - Add README with scope, migration mapping, and test notes
-    - Clarify migration references against historical DBIx::Class naming
+    - Initial release as standalone distribution extracted from DBIO core
+    - DBIO::SQLite schema component and DBIO::SQLite::Storage driver
+    - DBIO::SQLite::SQLMaker with SQLite-specific SQL generation
+    - DBIO::SQLite::Loader for Schema::Loader SQLite introspection support
+    - Fix bind parameter type affinity for untyped numeric values
+    - Migrate test suite from DBICTest to DBIO::Test / DBIO::SQLite::Test
+    - Rename all DBIC references to DBIO throughout
+    - Replace Path::Class with DBIO::Util path helpers in Loader
+    - Add replicated mode to SQLite test helper
+    - Comprehensive POD documentation for all modules
+    - Align POD with DBIO conventions (=attr, =method collectors)
+    - Restore historical Loader provenance note
