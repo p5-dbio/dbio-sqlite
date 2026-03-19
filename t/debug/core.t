@@ -7,15 +7,14 @@ use Test::Exception;
 use Try::Tiny;
 use File::Spec;
 use DBIO::SQLite::Test;
-use DBIO::Util qw(file_path slurp_file);
+use DBIO::Util qw(slurp_file);
+use File::Temp qw(tmpnam);
 
 BEGIN { delete @ENV{qw(DBIO_TRACE DBIO_TRACE_PROFILE DBIOTEST_SQLITE_USE_FILE)} }
 
 my $schema = DBIO::SQLite::Test->init_schema();
 
-my $lfn = file_path("t", "var", "sql-$$.log");
-unlink $lfn or die $!
-  if -e $lfn;
+my $lfn = tmpnam();
 
 # make sure we are testing the vanilla debugger and not ::PrettyTrace
 require DBIO::Storage::Statistics;
