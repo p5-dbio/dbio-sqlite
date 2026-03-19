@@ -10,7 +10,7 @@ plan tests => 1;
 my $normal_schema = DBIO::SQLite::Test->init_schema( sqlite_use_file => 1 );
 $normal_schema->storage->disconnect;
 
-# Steal the dsn, which should be like 'dbi:SQLite:t/var/DBIO.db'
+# Steal the dsn from the test schema
 my @dsn = ($normal_schema->storage->_dbi_connect_info->[0], undef, undef, {
   RaiseError => 1
 });

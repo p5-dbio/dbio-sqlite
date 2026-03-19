@@ -31,12 +31,13 @@ package DBIOVersion::Schema;
 use base 'DBIOTest::BaseSchema';
 use strict;
 use warnings;
+use File::Temp qw(tempdir);
 
 our $VERSION = '1.0';
 
 __PACKAGE__->register_class('Table', 'DBIOVersion::Table');
 __PACKAGE__->load_components('+DBIO::Schema::Versioned');
-__PACKAGE__->upgrade_directory("t/var/versioning_ddl-$$");
+__PACKAGE__->upgrade_directory(tempdir( CLEANUP => 1 ));
 
 sub ordered_schema_versions {
   return('1.0','2.0','3.0');
