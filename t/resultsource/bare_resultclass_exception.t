@@ -4,7 +4,6 @@ use warnings;
 use Test::More;
 use Test::Exception;
 
-use lib 't/lib';
 use DBIO::SQLite::Test;
 {
   package DBIO::Test::Foo;

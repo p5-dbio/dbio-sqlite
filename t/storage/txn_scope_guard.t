@@ -1,11 +1,10 @@
 use strict;
 use warnings;
-use lib qw(t/lib);
 
 use Test::More;
 use Test::Warn;
 use Test::Exception;
-use DBIOTest::RunMode;
+use DBIO::Test;
 use DBIO::SQLite::Test;
 
 # Test txn_scope_guard
@@ -205,7 +204,7 @@ for my $post_poison (0,1) {
   local $TODO = 'Do not know how to deal with trapped exceptions occuring after guard instantiation...'
     if ( $post_poison and (
       # take no chances on installation
-      ( DBIOTest::RunMode->is_plain and ($ENV{TRAVIS}||'') ne 'true' )
+      ( DBIO::Test->is_plain and ($ENV{TRAVIS}||'') ne 'true' )
         or
       # this always fails
       ! $pre_poison

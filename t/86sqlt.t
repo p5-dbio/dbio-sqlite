@@ -345,7 +345,7 @@ my %unique_constraints = (
   ],
 
   # Employee
-# Constraint is commented out in DBIOTest/Schema/Employee.pm
+# Constraint is commented out in DBIO::Test::Schema::Employee
 #  employee => [
 #    {
 #      'display' => 'employee position and group_id unique',

@@ -483,13 +483,13 @@ sub null_collapsed_branch {
 }
 
 {
-  package DBIOTest::_IRCapture;
+  package DBIO::Test::_IRCapture;
   sub inflate_result { [@_[2,3]] };
 }
 
 sub rs_contents {
   my $rs = shift;
-  $rs->result_class('DBIOTest::_IRCapture');
+  $rs->result_class('DBIO::Test::_IRCapture');
   die 'eeeeek - preprocessed $rs' if defined $rs->{_result_inflator}{is_core_row};
   $rs->{_result_inflator}{is_core_row} = 1 if $native_inflator;
   [$rs->all],
@@ -504,7 +504,7 @@ sub cmp_structures {
 
 
 {
-  package DBIOTest::_DoubleResult;
+  package DBIO::Test::_DoubleResult;
 
   sub inflate_result {
     my $class = shift;
@@ -515,13 +515,13 @@ sub cmp_structures {
 my $oxygene_rs = $schema->resultset('CD')->search({ 'me.title' => 'Oxygene' });
 
 is_deeply(
-  [ $oxygene_rs->search({}, { result_class => 'DBIOTest::_DoubleResult' })->all ],
+  [ $oxygene_rs->search({}, { result_class => 'DBIO::Test::_DoubleResult' })->all ],
   [ ({ $oxygene_rs->single->get_columns }) x 2 ],
 );
 
 is_deeply(
   [ $oxygene_rs->search({}, {
-    result_class => 'DBIOTest::_DoubleResult', prefetch => [qw(artist tracks)],
+    result_class => 'DBIO::Test::_DoubleResult', prefetch => [qw(artist tracks)],
     order_by => [qw(me.cdid tracks.title)],
   })->all ],
   [ (@{$oxygene_rs->search({}, {
@@ -532,7 +532,7 @@ is_deeply(
 
 
 {
-  package DBIOTest::_DieTrying;
+  package DBIO::Test::_DieTrying;
 
   sub inflate_result {
     die "nyah nyah nyah";
@@ -540,7 +540,7 @@ is_deeply(
 }
 
 throws_ok {
-  $schema->resultset('CD')->search({}, { result_class => 'DBIOTest::_DieTrying' })->all
+  $schema->resultset('CD')->search({}, { result_class => 'DBIO::Test::_DieTrying' })->all
 } qr/nyah nyah nyah/, 'Exception in custom inflate_result propagated correctly';
 
 

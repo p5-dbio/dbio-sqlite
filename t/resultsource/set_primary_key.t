@@ -4,7 +4,6 @@ use Test::More;
 use Test::Exception;
 use Test::Warn;
 
-use lib 't/lib';
 use DBIO::SQLite::Test;
 throws_ok {
   package Foo;

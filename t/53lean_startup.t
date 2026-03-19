@@ -42,7 +42,7 @@ BEGIN {
     push @{$require_sites->{$req}}, "$caller[1] line $caller[2]"
       if @caller;
 
-    return $res if $req =~ /^DBIO|^DBIOTest::/;
+    return $res if $req =~ /^DBIO|^DBIO::Test::/;
 
     # exclude everything where the current namespace does not match the called function
     # (this works around very weird XS-induced require callstack corruption)
@@ -61,7 +61,7 @@ BEGIN {
       Test::More::fail ("Unexpected require of '$req' by $caller[0] ($caller[1] line $caller[2])");
 
       if ( $ENV{TEST_VERBOSE} or ! $ENV{DBIO_PLAIN_INSTALL} ) {
-        CORE::require('DBIOTest/Util.pm');
+        CORE::require('DBIO/Test/Util.pm');
         Test::More::diag( 'Require invoked' .  DBIO::Test::Util::stacktrace() );
       }
     }

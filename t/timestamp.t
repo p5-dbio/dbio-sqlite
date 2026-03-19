@@ -9,8 +9,6 @@ BEGIN {
 
 use DateTime;
 
-use lib 't/lib';
-
 # Build a minimal test schema with Timestamp component
 {
   package TSTest::Schema::Article;

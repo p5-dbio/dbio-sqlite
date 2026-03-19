@@ -1,13 +1,11 @@
 use strict;
 use warnings;
-use lib qw(t/lib);
 
 use Test::More;
 use Test::Exception;
-# We need a separate schema class to avoid leaking into DBIOTest's leak tracker
 {
   package PopulateMoreTest::Schema;
-  use base 'DBIOTest::BaseSchema';
+  use base 'DBIO::Schema';
   __PACKAGE__->load_components(qw/Schema::PopulateMore/);
   __PACKAGE__->register_class('Artist' => 'DBIO::Test::Schema::Artist');
   __PACKAGE__->register_class('CD' => 'DBIO::Test::Schema::CD');

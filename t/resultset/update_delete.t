@@ -28,7 +28,7 @@ my ($fa, $fb, $fc) = $tkfks->related_resultset ('fourkeys')->populate ([
   [qw/1   1   1     2       c       30         /],
 ]);
 
-# This is already provided by DBIOTest
+# This is already provided by the test schema
 #my ($ta, $tb) = $tkfk->related_resultset ('twokeys')->populate ([
 #  [qw/artist  cd /],
 #  [qw/1       1  /],

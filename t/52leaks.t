@@ -19,11 +19,10 @@ BEGIN {
 
 use strict;
 use warnings;
-use lib qw(t/lib);
 use Test::More;
 
-use DBIOTest::RunMode;
-use DBIOTest::Util::LeakTracer qw(populate_weakregistry assert_empty_weakregistry visit_refs);
+use DBIO::Test;
+use DBIO::Test::Util::LeakTracer qw(populate_weakregistry assert_empty_weakregistry visit_refs);
 use Scalar::Util qw(weaken blessed reftype);
 use DBIO::Util qw(hrefaddr sigwarn_silencer modver_gt_or_eq modver_gt_or_eq_and_lt);
 BEGIN {
@@ -55,7 +54,7 @@ my $weak_registry = {};
 my $has_dt;
 
 # Skip the heavy-duty leak tracing when just doing an install
-unless (DBIOTest::RunMode->is_plain) {
+unless (DBIO::Test->is_plain) {
 
   # redefine the bless override so that we can catch each and every object created
   no warnings qw/redefine once/;
@@ -67,7 +66,7 @@ unless (DBIOTest::RunMode->is_plain) {
       $_[0], (@_ > 1) ? $_[1] : do {
         my ($class, $fn, $line) = caller();
         fail ("bless() of $_[0] into $class without explicit class specification at $fn line $line")
-          if $class =~ /^ (?: DBIx\:\:Class | DBIOTest ) /x;
+          if $class =~ /^ (?: DBIx\:\:Class | DBIO::Test ) /x;
         $class;
       }
     );
@@ -307,7 +306,7 @@ unless (DBIOTest::RunMode->is_plain) {
   #
   # Some elaborate SQLAC-replacements leak, do not worry about it for now
   if (
-    DBIOTest::Util::LeakTracer::CV_TRACING
+    DBIO::Test::Util::LeakTracer::CV_TRACING
       and
     ! $ENV{DBIOTEST_SWAPOUT_SQLAC_WITH}
   ) {
@@ -323,7 +322,7 @@ unless (DBIOTest::RunMode->is_plain) {
     # this is expensive - not running on install
     my $typecounts = {};
     if (
-      ! DBIOTest::RunMode->is_plain
+      ! DBIO::Test->is_plain
         and
       ! $ENV{DBIOTEST_IN_PERSISTENT_ENV}
     ) {
@@ -471,7 +470,7 @@ for my $addr (keys %$weak_registry) {
   }
   elsif (
 #    # if we can look at closed over pieces - we will register it as a global
-#    !DBIOTest::Util::LeakTracer::CV_TRACING
+#    !DBIO::Test::Util::LeakTracer::CV_TRACING
 #      and
     $names =~ /^SQL::Translator::Generator::DDL::SQLite/m
   ) {

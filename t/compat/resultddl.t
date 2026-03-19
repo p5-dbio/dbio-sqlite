@@ -9,7 +9,6 @@ BEGIN {
     unless eval { require DBIO::Compat::DBIxClass; 1 };
 }
 
-use lib 't/lib';
 use DBIO::Compat::DBIxClass;
 
 # Test: Compat layer loads and hooks @INC

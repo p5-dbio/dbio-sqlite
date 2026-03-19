@@ -5,7 +5,6 @@ use Test::More;
 use Test::Warn;
 use Test::Exception;
 
-use lib 't/lib';
 use DBIO::SQLite::Test;
 my $schema = DBIO::SQLite::Test->init_schema();
 $schema->_unregister_source('CD');

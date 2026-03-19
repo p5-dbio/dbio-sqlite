@@ -1,15 +1,14 @@
 use strict;
 use warnings;
-use lib qw(t/lib);
 use Test::More;
 BEGIN {
   plan skip_all =>
     'Skipping RH perl performance bug tests as DBIO_NO_WARN_BAD_PERL set'
     if ( $ENV{DBIO_NO_WARN_BAD_PERL} );
 
-  require DBIOTest::RunMode;
+  require DBIO::Test;
   plan skip_all => 'Skipping as system appears to be a smoker'
-    if DBIOTest::RunMode->is_smoker;
+    if DBIO::Test->is_smoker;
 }
 
 # globalllock so that the test runs alone

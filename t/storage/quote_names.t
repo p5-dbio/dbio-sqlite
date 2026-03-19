@@ -1,10 +1,8 @@
 use strict;
 use warnings;
-use lib qw(t/lib);
 use Test::More;
 use Data::Dumper::Concise;
 use Try::Tiny;
-use DBIOTest::RunMode;
 use DBIO::SQLite::Test;
 
 my %expected = (
@@ -76,11 +74,6 @@ my %dbs = (
   INFORMIX         => 'DBIO::Informix::Storage',
   MSSQL_ODBC       => 'DBIO::MSSQL::Storage',
 );
-
-# lie that we already locked stuff - the tests below do not touch anything
-# unless we are under travis, where the OOM killers reign and things are rough
-$ENV{DBIOTEST_LOCK_HOLDER} = -1
-  unless DBIOTest::RunMode->is_ci;
 
 # Make sure oracle is tried last - some clients (e.g. 10.2) have symbol
 # clashes with libssl, and will segfault everything coming after them

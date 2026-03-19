@@ -1,11 +1,9 @@
 use strict;
 use warnings;
-use lib qw(t/lib);
 
-use lib 't/lib';
-use DBIOTest::RunMode;
+use DBIO::Test;
 BEGIN {
-  if( DBIOTest::RunMode->is_plain ) {
+  if( DBIO::Test->is_plain ) {
     print "1..0 # SKIP not running dangerous segfault-prone test on plain install\n";
     exit 0;
   }

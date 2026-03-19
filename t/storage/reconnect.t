@@ -10,7 +10,7 @@ use DBIO::SQLite::Test;
 my $db_orig = DBIO::SQLite::Test->_sqlite_dbfilename;
 my $db_tmp  = "$db_orig.tmp";
 
-# Set up the "usual" sqlite for DBIOTest
+# Set up the "usual" sqlite
 my $schema = DBIO::SQLite::Test->init_schema( sqlite_use_file => 1 );
 
 # Make sure we're connected by doing something

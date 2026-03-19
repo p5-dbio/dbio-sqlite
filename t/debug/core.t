@@ -27,7 +27,7 @@ $schema->storage->debugfh($logfh);
 $schema->storage->debugfh->autoflush(1);
 $schema->resultset('CD')->count;
 
-my @loglines = slurp_file($lfn);
+my @loglines = split /\n/, slurp_file($lfn);
 is (@loglines, 1, 'one line of log');
 like($loglines[0], qr/^SELECT COUNT/, 'File log via debugfh success');
 
@@ -42,7 +42,7 @@ $schema->storage->debugfh(undef);
   my $schema2 = DBIO::SQLite::Test->init_schema(no_deploy => 1);
   $schema2->storage->_do_query('SELECT 1'); # _do_query() logs via standard mechanisms
 
-  my @loglines = slurp_file($lfn);
+  my @loglines = split /\n/, slurp_file($lfn);
   is(@loglines, 2, '2 lines of log');
   like($loglines[0], qr/^SELECT COUNT/, 'Env log from schema1 success');
   like($loglines[1], qr/^SELECT 1:/, 'Env log from schema2 success');
@@ -145,7 +145,7 @@ is_deeply(\@warnings, [], 'No warnings with unicode on STDERR');
   my $output = "";
 
   {
-    package DBIOTest::_Printable;
+    package DBIO::Test::_Printable;
 
     sub print {
       my ($self, @args) = @_;
@@ -155,7 +155,7 @@ is_deeply(\@warnings, [], 'No warnings with unicode on STDERR');
 
   $schema->storage->debugobj(undef);
   $schema->storage->debug(1);
-  $schema->storage->debugfh( bless {}, "DBIOTest::_Printable" );
+  $schema->storage->debugfh( bless {}, "DBIO::Test::_Printable" );
   $schema->storage->txn_do( sub { $schema->resultset('Artist')->count } );
 
   like (

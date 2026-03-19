@@ -3,7 +3,6 @@ use warnings;
 
 use Test::More;
 
-use lib 't/lib';
 use DBIO::SQLite::Test;
 my $schema = DBIO::SQLite::Test->init_schema(no_populate => 1, quote_names => 1 );
 
