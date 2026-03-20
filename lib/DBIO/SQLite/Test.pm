@@ -1,5 +1,6 @@
 package DBIO::SQLite::Test;
 # ABSTRACT: SQLite-specific test utilities for DBIO
+our $VERSION = '0.900';
 
 use strict;
 use warnings;

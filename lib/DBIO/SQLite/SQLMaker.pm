@@ -1,5 +1,6 @@
 package DBIO::SQLite::SQLMaker;
 # ABSTRACT: SQLite-specific SQL generation for DBIO
+our $VERSION = '0.900';
 
 use warnings;
 use strict;
