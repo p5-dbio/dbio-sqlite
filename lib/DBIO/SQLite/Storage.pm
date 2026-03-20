@@ -1,6 +1,6 @@
 package DBIO::SQLite::Storage;
 # ABSTRACT: SQLite storage driver for DBIO
-our $VERSION = '0.900';
+our $VERSION = '0.900000';
 
 use strict;
 use warnings;
