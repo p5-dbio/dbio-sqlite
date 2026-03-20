@@ -126,16 +126,13 @@ mkdir $cake_dir;
 $pid = fork();
 die "fork: $!" unless defined $pid;
 if (!$pid) {
-    eval {
-        DBIO::Loader::make_schema_at('TestSQLite::Cake', {
-            dump_directory => $cake_dir,
-            quiet          => 1,
-            generate_pod   => 0,
-            naming         => 'current',
-            loader_style   => 'cake',
-        }, [$dsn]);
-    };
-    if ($@) { warn "Cake generation error: $@"; exit 1 }
+    DBIO::Loader::make_schema_at('TestSQLite::Cake', {
+        dump_directory => $cake_dir,
+        quiet          => 1,
+        generate_pod   => 0,
+        naming         => 'current',
+        loader_style   => 'cake',
+    }, [$dsn]);
     exit 0;
 }
 waitpid($pid, 0);
@@ -147,7 +144,6 @@ my $cake_artist = _slurp("$cake_rd/Artist.pm");
 like $cake_artist, qr/use DBIO::Cake/,     'cake: uses DBIO::Cake';
 like $cake_artist, qr/^col id => /m,       'cake: col DSL for id';
 like $cake_artist, qr/^col name => /m,     'cake: col DSL for name';
-# Artist doesn't have belongs_to (it's on the CD side)
 
 my $cake_cd = _slurp("$cake_rd/Cd.pm");
 like $cake_cd, qr/^col artist_id => .*fk/m, 'cake: FK column has fk modifier';
