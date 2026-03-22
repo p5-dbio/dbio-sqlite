@@ -59,6 +59,44 @@ $dbh->do('CREATE TABLE type_test (
     blob_col BLOB
 )');
 
+# Test generated columns (SQLite 3.31+)
+my $has_generated;
+eval {
+    $dbh->do('CREATE TABLE generated_test (
+        id INTEGER PRIMARY KEY,
+        first_name TEXT,
+        last_name TEXT,
+        full_name TEXT GENERATED ALWAYS AS (first_name || \' \' || last_name) STORED
+    )');
+    $has_generated = 1;
+};
+$has_generated = 0 if $@;
+
+# Test STRICT table (SQLite 3.37+)
+my $has_strict;
+eval {
+    $dbh->do('CREATE TABLE strict_test (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        value REAL
+    ) STRICT');
+    $has_strict = 1;
+};
+$has_strict = 0 if $@;
+
+# Test WITHOUT ROWID
+$dbh->do('CREATE TABLE without_rowid_test (
+    key TEXT PRIMARY KEY,
+    value TEXT
+) WITHOUT ROWID');
+
+# Table with JSON column
+$dbh->do('CREATE TABLE json_test (
+    id INTEGER PRIMARY KEY,
+    data JSON,
+    config TEXT
+)');
+
 $dbh->disconnect;
 
 sub _slurp { open my $fh, '<', $_[0] or die "Cannot read $_[0]: $!"; local $/; <$fh> }
@@ -148,5 +186,37 @@ like $cake_artist, qr/^col name => /m,     'cake: col DSL for name';
 my $cake_cd = _slurp("$cake_rd/Cd.pm");
 like $cake_cd, qr/^col artist_id => .*fk/m, 'cake: FK column has fk modifier';
 like $cake_cd, qr/^belongs_to\b/m,           'cake: belongs_to DSL';
+
+# --- Test 3: SQLite-specific introspection features ---
+
+# Type affinity
+$types = _slurp("$rd/TypeTest.pm");
+like $types, qr/sqlite_type_affinity/, 'type affinity metadata present';
+
+# Generated columns
+SKIP: {
+    skip 'SQLite too old for generated columns', 2 unless $has_generated;
+    ok -f "$rd/GeneratedTest.pm", 'generated_test table found';
+    my $gen = _slurp("$rd/GeneratedTest.pm");
+    like $gen, qr/generated.*stored/s, 'generated column detected as stored';
+}
+
+# STRICT tables
+SKIP: {
+    skip 'SQLite too old for STRICT tables', 2 unless $has_strict;
+    ok -f "$rd/StrictTest.pm", 'strict_test table found';
+    my $strict = _slurp("$rd/StrictTest.pm");
+    like $strict, qr/sqlite_strict/, 'strict table metadata present';
+}
+
+# WITHOUT ROWID
+ok -f "$rd/WithoutRowidTest.pm", 'without_rowid_test table found';
+my $wor = _slurp("$rd/WithoutRowidTest.pm");
+like $wor, qr/sqlite_without_rowid/, 'without rowid metadata present';
+
+# JSON columns
+ok -f "$rd/JsonTest.pm", 'json_test table found';
+my $json = _slurp("$rd/JsonTest.pm");
+like $json, qr/sqlite_json/, 'json column metadata present';
 
 done_testing;

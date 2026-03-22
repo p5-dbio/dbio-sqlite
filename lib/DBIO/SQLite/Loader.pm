@@ -75,6 +75,22 @@ sub _columns_info_for {
         $cols{ $self->_lc($col) } = $info;
     }
 
+    # Try table_xinfo for generated column detection (SQLite 3.31+)
+    my %xinfo;
+    eval {
+        my $xsth = $self->dbh->prepare(
+            "pragma table_xinfo(" . $self->dbh->quote_identifier($table) . ")"
+        );
+        $xsth->execute;
+        while (my $row = $xsth->fetchrow_hashref) {
+            $xinfo{ $self->_lc($row->{name}) } = $row;
+        }
+        $xsth->finish;
+    };
+
+    my $is_strict      = $self->_table_is_strict($table);
+    my $is_without_rowid = $self->_table_is_without_rowid($table);
+
     my ($num_pk, $pk_col) = (0);
     # SQLite doesn't give us the info we need to do this nicely :(
     # If there is exactly one column marked PK, and its type is integer,
@@ -96,9 +112,77 @@ sub _columns_info_for {
         if ($num_pk == 1 and defined $pk_col and $pk_col eq $col) {
             $info->{is_auto_increment} = 1;
         }
+
+        # Type affinity (SQLite storage class mapping)
+        my $declared_type = uc($cols{$col}{type} || '');
+        $info->{extra}{sqlite_type_affinity} = $self->_sqlite_type_affinity($declared_type);
+
+        # JSON column awareness
+        if ($declared_type =~ /JSON/) {
+            $info->{extra}{sqlite_json} = 1;
+        }
+
+        # STRICT table flag
+        if ($is_strict) {
+            $info->{extra}{sqlite_strict} = 1;
+        }
+
+        # WITHOUT ROWID flag
+        if ($is_without_rowid) {
+            $info->{extra}{sqlite_without_rowid} = 1;
+        }
+
+        # Generated column detection via table_xinfo
+        if (%xinfo && exists $xinfo{$col}) {
+            my $hidden = $xinfo{$col}{hidden};
+            if (defined $hidden && $hidden == 2) {
+                $info->{extra}{generated} = 'virtual';
+            }
+            elsif (defined $hidden && $hidden == 3) {
+                $info->{extra}{generated} = 'stored';
+            }
+        }
     }
 
     return $result;
+}
+
+sub _sqlite_type_affinity {
+    my ($self, $declared_type) = @_;
+
+    # Rules from https://www.sqlite.org/datatype3.html section 3.1
+    return 'INTEGER' if $declared_type =~ /INT/;
+    return 'TEXT'    if $declared_type =~ /(?:CHAR|CLOB|TEXT)/;
+    return 'BLOB'   if $declared_type =~ /BLOB/ || $declared_type eq '';
+    return 'REAL'    if $declared_type =~ /(?:REAL|FLOA|DOUB)/;
+    return 'NUMERIC';
+}
+
+sub _table_is_strict {
+    my ($self, $table) = @_;
+
+    my $ddl = $self->_table_ddl($table);
+    return 0 unless defined $ddl;
+    return $ddl =~ /\)\s*STRICT\s*$/si || $ddl =~ /,\s*STRICT\s*\)/si ? 1 : 0;
+}
+
+sub _table_is_without_rowid {
+    my ($self, $table) = @_;
+
+    my $ddl = $self->_table_ddl($table);
+    return 0 unless defined $ddl;
+    return $ddl =~ /WITHOUT\s+ROWID\s*$/si ? 1 : 0;
+}
+
+sub _table_ddl {
+    my ($self, $table) = @_;
+
+    my $tbl_name = ref $table ? $table->name : $table;
+    my $ddl = $self->dbh->selectcol_arrayref(
+        "SELECT sql FROM sqlite_master WHERE tbl_name = ? AND type = 'table'",
+        undef, $tbl_name,
+    );
+    return $ddl && $ddl->[0] ? $ddl->[0] : undef;
 }
 
 sub _table_fk_info {
@@ -259,6 +343,25 @@ sub _table_info_matches {
     return $info->{TABLE_SCHEM} eq $table_schema
         && $info->{TABLE_NAME}  eq $table->name;
 }
+
+=head2 _sqlite_type_affinity
+
+Returns the SQLite type affinity class (INTEGER, TEXT, BLOB, REAL, or NUMERIC)
+for a declared column type, following the rules in
+L<https://www.sqlite.org/datatype3.html>.
+
+=head2 _table_is_strict
+
+Returns true if the table DDL ends with C<STRICT> (SQLite 3.37+).
+
+=head2 _table_is_without_rowid
+
+Returns true if the table DDL ends with C<WITHOUT ROWID>.
+
+=head2 _table_ddl
+
+Returns the raw SQL DDL string for a table from C<sqlite_master>, or C<undef>
+if the table is not found.
 
 =head1 SEE ALSO
 
