@@ -6,6 +6,7 @@ use Test::Warn;
 use Test::Exception;
 use DBIO::Test;
 use DBIO::SQLite::Test;
+use DBIO::Util qw(old_mro);
 
 # Test txn_scope_guard
 {
@@ -125,7 +126,7 @@ use DBIO::SQLite::Test;
   no warnings 'redefine';
 
   local *{DBIO::Storage::DBI::txn_rollback} = sub { die 'die die my darling' };
-  Class::C3->reinitialize() if DBIO::_ENV_::OLD_MRO;
+  Class::C3->reinitialize() if old_mro;
 
   throws_ok (sub {
     my $guard = $schema->txn_scope_guard;
@@ -156,7 +157,7 @@ for my $post_poison (0,1) {
   no strict 'refs';
   no warnings 'redefine';
   local *{DBIO::Storage::DBI::txn_rollback} = sub { die 'die die my darling' };
-  Class::C3->reinitialize() if DBIO::_ENV_::OLD_MRO;
+  Class::C3->reinitialize() if old_mro;
 
 #The warn from within a DESTROY callback freaks out Test::Warn, do it old-school
 =begin

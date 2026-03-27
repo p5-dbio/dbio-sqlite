@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 use Test::Exception;
 use DBIO::SQLite::Test;
+use DBIO::Util qw(old_mro);
 my $from_storage_ran = 0;
 my $to_storage_ran = 0;
 my $schema = DBIO::SQLite::Test->init_schema(no_populate => 1 );
@@ -12,7 +13,7 @@ DBIO::Test::Schema::Artist->filter_column(charfield => {
   filter_from_storage => sub { $from_storage_ran++; defined $_[1] ? $_[1] * 2 : undef },
   filter_to_storage   => sub { $to_storage_ran++; defined $_[1] ? $_[1] / 2 : undef },
 });
-Class::C3->reinitialize() if DBIO::_ENV_::OLD_MRO;
+Class::C3->reinitialize() if old_mro;
 
 my $artist = $schema->resultset('Artist')->create( { charfield => 20 } );
 
@@ -278,7 +279,7 @@ IC_DIE: {
 DBIO::Test::Schema::Artist->filter_column(charfield => {
   filter_to_storage => sub { $to_storage_ran++; $_[1] },
 });
-Class::C3->reinitialize() if DBIO::_ENV_::OLD_MRO;
+Class::C3->reinitialize() if old_mro;
 
 ASYMMETRIC_TO_TEST: {
   # initialise value
@@ -304,7 +305,7 @@ ASYMMETRIC_TO_TEST: {
 DBIO::Test::Schema::Artist->filter_column(charfield => {
   filter_from_storage => sub { $from_storage_ran++; $_[1] },
 });
-Class::C3->reinitialize() if DBIO::_ENV_::OLD_MRO;
+Class::C3->reinitialize() if old_mro;
 
 ASYMMETRIC_FROM_TEST: {
   # initialise value

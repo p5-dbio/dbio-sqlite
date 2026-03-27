@@ -3,6 +3,7 @@ requires 'DBIO';
 requires 'DBI';
 requires 'DBD::SQLite';
 requires 'namespace::clean';
+requires 'DateTime::Format::SQLite';
 
 on test => sub {
   requires 'Test::More', '0.98';

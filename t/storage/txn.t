@@ -5,6 +5,7 @@ use Test::More;
 use Test::Warn;
 use Test::Exception;
 use DBIO::SQLite::Test;
+use DBIO::Util qw(old_mro);
 
 my $code = sub {
   my ($artist, @cd_titles) = @_;
@@ -302,7 +303,7 @@ my $fail_code = sub {
     #local *DBIO::SQLite::Storage::txn_rollback = sub { die 'FAILED' };
 
     local *DBIO::Storage::DBI::txn_rollback = sub { die 'FAILED' };
-    Class::C3->reinitialize() if DBIO::_ENV_::OLD_MRO;
+    Class::C3->reinitialize() if old_mro;
 
     throws_ok (
       sub {

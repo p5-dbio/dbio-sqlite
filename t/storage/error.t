@@ -6,6 +6,7 @@ use Test::Warn;
 use Test::Exception;
 
 use DBIO::SQLite::Test;
+use DBIO::Util qw(peepeeness);
 for my $conn_args (
   [ on_connect_do   => "_NOPE_" ],
   [ on_connect_call => sub { shift->_dbh->do("_NOPE_") } ],
@@ -92,7 +93,7 @@ throws_ok (
 # exception fallback:
 
 SKIP: {
-  if ( !!DBIO::_ENV_::PEEPEENESS ) {
+  if ( !!peepeeness ) {
     skip "Your perl version $] appears to leak like a sieve - skipping garbage collected \$schema test", 1;
   }
 

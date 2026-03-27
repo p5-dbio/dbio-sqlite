@@ -4,7 +4,7 @@ use warnings;
 use Test::More;
 use DBIO::SQLite::Test;
 use B::Deparse;
-use DBIO::Util 'perlstring';
+use DBIO::Util qw(perlstring stresstest_utf8_upgrade_generated_collapser_source);
 
 # globally set for the rest of test
 # the rowparser maker does not order its hashes by default for the miniscule
@@ -752,7 +752,7 @@ my $deparser;
 sub is_same_src { SKIP: {
 
   skip "Skipping comparison of unicode-posioned source", 1
-    if DBIO::_ENV_::STRESSTEST_UTF8_UPGRADE_GENERATED_COLLAPSER_SOURCE;
+    if stresstest_utf8_upgrade_generated_collapser_source;
 
   $deparser ||= B::Deparse->new;
   local $Test::Builder::Level = $Test::Builder::Level + 1;

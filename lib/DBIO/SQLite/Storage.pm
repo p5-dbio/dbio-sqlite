@@ -12,7 +12,7 @@ __PACKAGE__->register_driver('SQLite' => __PACKAGE__);
 
 use Context::Preserve 'preserve_context';
 use SQL::Abstract::Util 'is_plain_value';
-use DBIO::Util qw(modver_gt_or_eq sigwarn_silencer);
+use DBIO::Util qw(iv_size modver_gt_or_eq os_name sigwarn_silencer);
 use Scalar::Util 'looks_like_number';
 use DBIO::Carp;
 use Try::Tiny;
@@ -263,9 +263,9 @@ coercions.
 sub _dbh_execute {
   if (
     (
-      DBIO::_ENV_::IV_SIZE < 8
+      iv_size < 8
         or
-      DBIO::_ENV_::OS_NAME eq 'MSWin32'
+      os_name eq 'MSWin32'
     )
       and
     ! defined $DBD::SQLite::__DBIO_CHECK_dbd_mishandles_bound_BIGINT
@@ -283,9 +283,9 @@ sub _dbh_execute {
     )
   /x ) if (
     (
-      DBIO::_ENV_::IV_SIZE < 8
+      iv_size < 8
         or
-      DBIO::_ENV_::OS_NAME eq 'MSWin32'
+      os_name eq 'MSWin32'
     )
       and
     $DBD::SQLite::__DBIO_CHECK_dbd_mishandles_bound_BIGINT
