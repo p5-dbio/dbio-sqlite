@@ -2,3 +2,6 @@ Revision history for DBIO-SQLite
 
 {{$NEXT}}
     - Remove sql_limit_dialect from Storage (uses default apply_limit)
+    - Declare DateTime::Format::SQLite as a runtime dependency
+    - Add AccessBroker connect smoke coverage for SQLite storage
+    - Move remaining driver _ENV_ usage to DBIO::Util helpers
