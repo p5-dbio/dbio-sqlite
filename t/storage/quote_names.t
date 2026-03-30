@@ -61,7 +61,7 @@ for my $class (keys %expected) { SKIP: {
 
 # Env var to base class mapping, these are the DBs I actually have.
 # the SQLITE is a fake memory dsn
-local $ENV{DBIOTEST_SQLITE_DSN} = 'dbi:SQLite::memory:';
+local $ENV{DBIO_TEST_SQLITE_DSN} = 'dbi:SQLite::memory:';
 my %dbs = (
   SQLITE           => 'DBIO::SQLite::Storage',
   ORA              => 'DBIO::Oracle::Storage',
