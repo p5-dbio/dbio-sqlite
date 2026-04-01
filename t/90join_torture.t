@@ -30,24 +30,24 @@ lives_ok (sub {
   is_same_sql_bind (
     $rs->as_query,
     '(
-      SELECT  me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track,
-              artist.artistid, artist.name, artist.rank, artist.charfield,
-              cd_to_producer.cd, cd_to_producer.producer, cd_to_producer.attribute,
-              producer.producerid, producer.name,
-              producer_to_cd.cd, producer_to_cd.producer, producer_to_cd.attribute
-        FROM cd me
-        LEFT JOIN cd_to_producer cd_to_producer
-          ON cd_to_producer.cd = me.cdid
-        LEFT JOIN producer producer
-          ON producer.producerid = cd_to_producer.producer
-        LEFT JOIN cd_to_producer producer_to_cd
-          ON producer_to_cd.producer = producer.producerid
-        LEFT JOIN cd_to_producer cd_to_producer_2
-          ON cd_to_producer_2.cd = me.cdid
-        LEFT JOIN producer producer_2
-          ON producer_2.producerid = cd_to_producer_2.producer
-        JOIN artist artist ON artist.artistid = me.artist
-      WHERE ( ( producer.name = ? AND producer_2.name = ? ) )
+      SELECT  "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track",
+              "artist"."artistid", "artist"."name", "artist"."rank", "artist"."charfield",
+              "cd_to_producer"."cd", "cd_to_producer"."producer", "cd_to_producer"."attribute",
+              "producer"."producerid", "producer"."name",
+              "producer_to_cd"."cd", "producer_to_cd"."producer", "producer_to_cd"."attribute"
+        FROM cd "me"
+        LEFT JOIN "cd_to_producer" "cd_to_producer"
+          ON "cd_to_producer"."cd" = "me"."cdid"
+        LEFT JOIN "producer" "producer"
+          ON "producer"."producerid" = "cd_to_producer"."producer"
+        LEFT JOIN "cd_to_producer" "producer_to_cd"
+          ON "producer_to_cd"."producer" = "producer"."producerid"
+        LEFT JOIN "cd_to_producer" "cd_to_producer_2"
+          ON "cd_to_producer_2"."cd" = "me"."cdid"
+        LEFT JOIN "producer" "producer_2"
+          ON "producer_2"."producerid" = "cd_to_producer_2"."producer"
+        JOIN "artist" "artist" ON "artist"."artistid" = "me"."artist"
+      WHERE ( ( "producer"."name" = ? AND "producer_2"."name" = ? ) )
     )',
     [
       [ { sqlt_datatype => 'varchar', dbic_colname => 'producer.name', sqlt_size => 100 }
@@ -170,12 +170,12 @@ lives_ok ( sub {
     '(
       SELECT COUNT( * )
         FROM (
-          SELECT me.cd_id
-            FROM cd_artwork me
-            JOIN cd cd ON cd.cdid = me.cd_id
-            JOIN artist artist_2 ON artist_2.artistid = cd.artist
-          GROUP BY me.cd_id
-        ) me
+          SELECT "me"."cd_id"
+            FROM "cd_artwork" "me"
+            JOIN cd "cd" ON "cd"."cdid" = "me"."cd_id"
+            JOIN "artist" "artist_2" ON "artist_2"."artistid" = "cd"."artist"
+          GROUP BY "me"."cd_id"
+        ) "me"
     )',
     [],
   );
@@ -193,12 +193,12 @@ lives_ok (sub {
   is_same_sql_bind (
     $rs->as_query,
     '(
-      SELECT me.cdid
-        FROM cd me
-        LEFT JOIN cd_artwork artwork
-          ON artwork.cd_id = me.cdid
-        LEFT JOIN images images
-          ON images.artwork_id = artwork.cd_id
+      SELECT "me"."cdid"
+        FROM cd "me"
+        LEFT JOIN "cd_artwork" "artwork"
+          ON "artwork"."cd_id" = "me"."cdid"
+        LEFT JOIN "images" "images"
+          ON "images"."artwork_id" = "artwork"."cd_id"
     )',
     [],
   );

@@ -72,10 +72,10 @@ my $dist_rs = $rs->search ({}, {
 is_same_sql_bind(
   $dist_rs->as_query,
   '(
-    SELECT me.year
-      FROM cd me
-    GROUP BY me.year
-    ORDER BY MAX(cdid) DESC, year DESC
+    SELECT "me"."year"
+      FROM cd "me"
+    GROUP BY "me"."year"
+    ORDER BY MAX("cdid") DESC, "year" DESC
   )',
   [],
   'Correct SQL on external-ordered distinct',
@@ -86,10 +86,10 @@ is_same_sql_bind(
   '(
     SELECT COUNT( * )
       FROM (
-        SELECT me.year
-          FROM cd me
-        GROUP BY me.year
-      ) me
+        SELECT "me"."year"
+          FROM cd "me"
+        GROUP BY "me"."year"
+      ) "me"
   )',
   [],
   'Correct SQL on count of external-orderdd distinct',
@@ -140,21 +140,21 @@ lives_ok(sub { $psrs->get_column('addedtitle')->next }, '+select/+as multiple ad
 # test that +select/+as specs do not leak
 is_same_sql_bind (
   $psrs->get_column('year')->as_query,
-  '(SELECT me.year FROM cd me)',
+  '(SELECT "me"."year" FROM cd "me")',
   [],
   'Correct SQL for get_column/as'
 );
 
 is_same_sql_bind (
   $psrs->get_column('addedtitle')->as_query,
-  '(SELECT me.title FROM cd me)',
+  '(SELECT "me"."title" FROM cd "me")',
   [],
   'Correct SQL for get_column/+as col'
 );
 
 is_same_sql_bind (
   $psrs->get_column('tlength')->as_query,
-  '(SELECT LENGTH(title) AS title_length FROM cd me)',
+  '(SELECT LENGTH(title) AS title_length FROM cd "me")',
   [],
   'Correct SQL for get_column/+as func'
 );
@@ -216,7 +216,7 @@ my $pob_rs = $rs->search({}, {
 });
 is_same_sql_bind (
   $pob_rs->get_column("me.title")->as_query,
-  '(SELECT me.title FROM (SELECT me.title, tracks.title FROM cd me LEFT JOIN track tracks ON tracks.cd = me.cdid GROUP BY me.title, tracks.title ORDER BY position ASC) me)',
+  '(SELECT "me"."title" FROM (SELECT "me"."title", "tracks"."title" FROM cd "me" LEFT JOIN "track" "tracks" ON "tracks"."cd" = "me"."cdid" GROUP BY "me"."title", "tracks"."title" ORDER BY "position" ASC) "me")',
   [],
   'Correct SQL for prefetch/order_by/group_by'
 );
@@ -288,24 +288,25 @@ is_same_sql_bind (
   # With the current behavior the user will at least get a nice fat exception from the
   # RDBMS (or maybe the RDBMS will even decide to handle the situation sensibly...)
   for (
-    [ cnt => 'COUNT( me.cdid )' ],
+    [ cnt => 'COUNT( "me"."cdid" )' ],
     [ year_plus_one => 'year + ?' => [ {} => 1 ] ],
   ) {
     my ($col, $sel_grp_sql, @sel_grp_bind) = @$_;
 
+    my $expected_sql = "(
+        SELECT $sel_grp_sql
+          FROM cd \"me\"
+          JOIN \"artist\" \"artist\"
+            ON \"artist\".\"artistid\" = \"me\".\"artist\"
+          LEFT JOIN \"track\" \"tracks\"
+            ON \"tracks\".\"cd\" = \"me\".\"cdid\"
+        WHERE \"artist\".\"name\" != ? AND \"tracks\".\"trackid\" IS NOT NULL
+        GROUP BY $sel_grp_sql
+        ORDER BY MIN(\"me\".\"year\")
+      )";
     warnings_exist { is_same_sql_bind(
       $rstypes->{'implicitly grouped'}->get_column($col)->as_query,
-      "(
-        SELECT $sel_grp_sql
-          FROM cd me
-          JOIN artist artist
-            ON artist.artistid = me.artist
-          LEFT JOIN track tracks
-            ON tracks.cd = me.cdid
-        WHERE artist.name != ? AND tracks.trackid IS NOT NULL
-        GROUP BY $sel_grp_sql
-        ORDER BY MIN(me.year)
-      )",
+      $expected_sql,
       [
         @sel_grp_bind,
         [ { dbic_colname => 'artist.name', sqlt_datatype => 'varchar', sqlt_size => 100 }

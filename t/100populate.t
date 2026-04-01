@@ -176,7 +176,7 @@ is($links[2]->title, undef);
       [
         [ 'BEGIN' ],
         [
-          'INSERT INTO link( id, title, url ) VALUES( ?, ?, ? )',
+          'INSERT INTO "link"( "id", "title", "url" ) VALUES( ?, ?, ? )',
           "__BULK_INSERT__"
         ],
         [ 'COMMIT' ],
@@ -528,15 +528,15 @@ $schema->is_executed_sql_bind(
   },
   [
     [ 'BEGIN' ],
-    [ 'INSERT INTO twokeys ( artist, cd)
+    [ 'INSERT INTO "twokeys" ( "artist", "cd")
         VALUES ( ?, ? )',
       '__BULK_INSERT__'
     ],
-    [ 'INSERT INTO fourkeys_to_twokeys ( autopilot, f_bar, f_foo, f_goodbye, f_hello, t_artist, t_cd)
+    [ 'INSERT INTO "fourkeys_to_twokeys" ( "autopilot", "f_bar", "f_foo", "f_goodbye", "f_hello", "t_artist", "t_cd")
         VALUES (
           ?, ?, ?, ?, ?,
-          ( SELECT me.artist FROM twokeys me WHERE artist = ? AND cd = ? ),
-          ( SELECT me.cd FROM twokeys me WHERE artist = ? AND cd = ? )
+          ( SELECT "me"."artist" FROM "twokeys" "me" WHERE ( "artist" = ? AND "cd" = ? ) ),
+          ( SELECT "me"."cd" FROM "twokeys" "me" WHERE ( "artist" = ? AND "cd" = ? ) )
         )
       ',
       '__BULK_INSERT__'

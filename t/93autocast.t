@@ -45,34 +45,14 @@ my @bind = (
 );
 
 $schema->is_executed_sql_bind( sub { $rs->all }, [[
-  '
-    SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-      FROM cd me
-      LEFT JOIN track tracks ON tracks.cd = me.cdid
-    WHERE
-          cdid > ?
-      AND me.single_track = ?
-      AND tracks.last_updated_at IS NOT NULL
-      AND tracks.last_updated_on < ?
-      AND tracks.position = ?
-  ',
+  'SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track" FROM cd "me" LEFT JOIN "track" "tracks" ON "tracks"."cd" = "me"."cdid" WHERE ( "cdid" > ? AND "me"."single_track" = ? AND "tracks"."last_updated_at" IS NOT NULL AND "tracks"."last_updated_on" < ? AND "tracks"."position" = ? )',
   @bind,
 ]], 'expected sql with casting off' );
 
 $schema->storage->auto_cast (1);
 
 $schema->is_executed_sql_bind( sub { $rs->all }, [[
-  '
-    SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-      FROM cd me
-      LEFT JOIN track tracks ON tracks.cd = me.cdid
-    WHERE
-          cdid > ?
-      AND me.single_track = ?
-      AND tracks.last_updated_at IS NOT NULL
-      AND tracks.last_updated_on < ?
-      AND tracks.position = ?
-  ',
+  'SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track" FROM cd "me" LEFT JOIN "track" "tracks" ON "tracks"."cd" = "me"."cdid" WHERE ( "cdid" > ? AND "me"."single_track" = ? AND "tracks"."last_updated_at" IS NOT NULL AND "tracks"."last_updated_on" < ? AND "tracks"."position" = ? )',
   @bind,
 ]], 'expected sql with casting on' );
 

@@ -226,7 +226,7 @@ is($row->baz, 3, 'baz is correct');
 
   $schema->is_executed_sql_bind( sub { $artist->discard_changes }, [
     [
-      'SELECT me.artistid, me.name, me.rank, me.charfield FROM artist me WHERE me.artistid = ?',
+      'SELECT "me"."artistid", "me"."name", "me"."rank", "me"."charfield" FROM "artist" "me" WHERE "me"."artistid" = ?',
       [ { dbic_colname => "me.artistid", sqlt_datatype => "integer" } => 1 ],
     ]
   ], 'Expected query on discard_changes');

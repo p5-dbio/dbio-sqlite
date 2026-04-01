@@ -22,6 +22,16 @@ __PACKAGE__->sql_maker_class('DBIO::SQLite::SQLMaker');
 __PACKAGE__->sql_quote_char ('"');
 __PACKAGE__->datetime_parser_type ('DateTime::Format::SQLite');
 
+sub sql_maker {
+  my $self = shift;
+  my $sm = $self->next::method(@_);
+  # SQLite always uses double-quote identifier quoting — ensure it is
+  # active even when the caller did not pass quote_names in connect_info.
+  $sm->{quote_char} //= $self->sql_quote_char;
+  $sm->{name_sep}   //= $self->sql_name_sep;
+  $sm;
+}
+
 =head1 DESCRIPTION
 
 SQLite storage driver for DBIO. Extends L<DBIO::Storage::DBI> with

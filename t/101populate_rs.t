@@ -23,7 +23,7 @@ my $schema  = DBIO::SQLite::Test->init_schema();
 my $art_rs  = $schema->resultset('Artist');
 my $cd_rs  = $schema->resultset('CD');
 
-my $restricted_art_rs  = $art_rs->search({ -and => [ rank => 42, charfield => { '=', \['(SELECT MAX(artistid) FROM artist) + ?', 6] } ] });
+my $restricted_art_rs  = $art_rs->search({ -and => [ rank => 42, charfield => { '=', \['(SELECT MAX("artistid") FROM "artist") + ?', 6] } ] });
 
 ok( $schema, 'Got a Schema object');
 ok( $art_rs, 'Got Good Artist Resultset');
@@ -412,11 +412,12 @@ VOID_CONTEXT: {
 
     $art_rs->populate($artists);
 
-    my ($undef, $girl, $formerly, $damn, $crap) = $art_rs->search(
+    my ($girl, $formerly, $damn, $crap) = $art_rs->search(
 
-      {name=>[ map { $_->{name} } @$artists]},
+      {name => [ map { $_->{name} } grep { defined $_->{name} } @$artists ]},
       {order_by=>'name ASC'},
-    );
+    )->all;
+    my $undef = $art_rs->search({name => undef})->first;
 
     ## Do we have the right object?
 
@@ -583,7 +584,7 @@ VOID_CONTEXT: {
     my ($girl, $formerly, $damn, $crap) = $art_rs->search(
       {name=>[sort map {$_->{name}} @$artists]},
       {order_by=>'name ASC'},
-    );
+    )->all;
 
     ## Do we have the right object?
 

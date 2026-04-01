@@ -9,7 +9,7 @@ use DBIO::SQLite::Test ':DiffSQL';
 
 my $schema = DBIO::SQLite::Test->init_schema();
 
-my @art = $schema->resultset("Artist")->search({ }, { order_by => 'name DESC'});
+my @art = $schema->resultset("Artist")->search({ }, { order_by => { -desc => 'name' } });
 
 is(@art, 3, "Three artists returned");
 

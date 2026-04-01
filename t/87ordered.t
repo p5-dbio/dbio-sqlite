@@ -14,7 +14,7 @@ $employees->delete();
 foreach (1..5) {
     $employees->create({ name=>'temp' });
 }
-$employees = $employees->search(undef,{order_by=>'position'});
+$employees = $employees->search(undef,{order_by=>{-asc=>'position'}});
 ok( check_rs($employees), "intial positions" );
 
 hammer_rs( $employees );
@@ -26,7 +26,7 @@ foreach my $group_id (1..4) {
         $employees->create({ name=>'temp', group_id=>$group_id });
     }
 }
-$employees = $employees->search(undef,{order_by=>'group_id,position'});
+$employees = $employees->search(undef,{order_by=>[{-asc=>'group_id'}, {-asc=>'position'}]});
 
 foreach my $group_id (1..4) {
     my $group_employees = $employees->search({group_id=>$group_id});
