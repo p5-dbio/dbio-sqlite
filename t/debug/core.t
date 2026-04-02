@@ -103,7 +103,7 @@ is_deeply(\@warnings, [], 'No warnings with unicode on STDERR');
     title => { '!=' => \[ '?', undef ] }
   });
 
-  my $sql_trace = 'SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track FROM cd me WHERE ( artist = ? AND ( cdid BETWEEN ? AND ? ) AND title != ? )';
+  my $sql_trace = 'SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track" FROM cd "me" WHERE ( "artist" = ? AND ( "cdid" BETWEEN ? AND ? ) AND "title" != ? )';
   my @bind_trace = qw( '1' '1' '3' NULL );  # quotes are in fact part of the trace </facepalm>
 
 
@@ -162,7 +162,7 @@ is_deeply(\@warnings, [], 'No warnings with unicode on STDERR');
     qr/
       \A
       ^ \QBEGIN WORK\E \s*?
-      ^ \QSELECT COUNT( * ) FROM artist me:\E \s*?
+      ^ \QSELECT COUNT( * ) FROM "artist" "me":\E \s*?
       ^ \QCOMMIT\E \s*?
       \z
     /xm

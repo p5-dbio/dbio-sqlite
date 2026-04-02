@@ -21,14 +21,14 @@ my $schema = DBIO::SQLite::Test->init_schema();
     '(
       SELECT COUNT( * )
         FROM (
-          SELECT cds.cdid
-            FROM artist me
-            JOIN cd cds ON cds.artist = me.artistid
-            LEFT JOIN track tracks ON tracks.cd = cds.cdid
-            JOIN artist artist ON artist.artistid = cds.artist
-          WHERE tracks.position = ? OR tracks.position = ?
-          GROUP BY cds.cdid
-        ) cds
+          SELECT "cds"."cdid"
+            FROM "artist" "me"
+            JOIN cd "cds" ON "cds"."artist" = "me"."artistid"
+            LEFT JOIN "track" "tracks" ON "tracks"."cd" = "cds"."cdid"
+            JOIN "artist" "artist" ON "artist"."artistid" = "cds"."artist"
+          WHERE "tracks"."position" = ? OR "tracks"."position" = ?
+          GROUP BY "cds"."cdid"
+        ) "cds"
     )',
     [ map { [ { sqlt_datatype => 'int', dbic_colname => 'tracks.position' } => $_ ] } (1, 2) ],
   );
@@ -49,18 +49,18 @@ my $schema = DBIO::SQLite::Test->init_schema();
     '(
       SELECT COUNT( * )
         FROM (
-          SELECT genre.genreid
+          SELECT "genre"."genreid"
             FROM (
-              SELECT me.artistid, me.name, me.rank, me.charfield
-                FROM artist me
-              GROUP BY me.artistid, me.name, me.rank, me.charfield
-            ) me
-            JOIN cd cds ON cds.artist = me.artistid
-            JOIN genre genre ON genre.genreid = cds.genreid
-          WHERE ( genre.name = ? )
-          GROUP BY genre.genreid
+              SELECT "me"."artistid", "me"."name", "me"."rank", "me"."charfield"
+                FROM "artist" "me"
+              GROUP BY "me"."artistid", "me"."name", "me"."rank", "me"."charfield"
+            ) "me"
+            JOIN cd "cds" ON "cds"."artist" = "me"."artistid"
+            JOIN "genre" "genre" ON "genre"."genreid" = "cds"."genreid"
+          WHERE ( "genre"."name" = ? )
+          GROUP BY "genre"."genreid"
         )
-      genre
+      "genre"
     )',
     [ [ { sqlt_datatype => 'varchar', sqlt_size => 100, dbic_colname =>  'genre.name' }
         => 'emo' ]
@@ -84,11 +84,11 @@ my $schema = DBIO::SQLite::Test->init_schema();
     $rs->count_rs->as_query,
     '(
       SELECT COUNT( * )
-        FROM cd me
-        JOIN track tracks ON tracks.cd = me.cdid
-        JOIN cd disc ON disc.cdid = tracks.cd
-        LEFT JOIN lyrics lyrics ON lyrics.track_id = tracks.trackid
-      WHERE lyrics.lyric_id IS NULL AND (position = ? OR position = ?)
+        FROM cd "me"
+        JOIN "track" "tracks" ON "tracks"."cd" = "me"."cdid"
+        JOIN cd "disc" ON "disc"."cdid" = "tracks"."cd"
+        LEFT JOIN "lyrics" "lyrics" ON "lyrics"."track_id" = "tracks"."trackid"
+      WHERE "lyrics"."lyric_id" IS NULL AND ("position" = ? OR "position" = ?)
     )',
     [ map { [ { sqlt_datatype => 'int', dbic_colname => 'position' } => $_ ] } (1, 2) ],
   );

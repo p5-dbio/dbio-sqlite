@@ -97,10 +97,10 @@ throws_ok(
   is_same_sql_bind (
     $rs->as_query,
     '(
-      SELECT me.artistid, me.name, me.rank, me.charfield, COUNT( cds.cdid ) AS amount_of_cds
-        FROM artist me LEFT JOIN cd cds ON cds.artist = me.artistid
-      GROUP BY me.artistid, me.name, me.rank, me.charfield
-      ORDER BY amount_of_cds DESC
+      SELECT "me"."artistid", "me"."name", "me"."rank", "me"."charfield", COUNT( "cds"."cdid" ) AS "amount_of_cds"
+        FROM "artist" "me" LEFT JOIN cd "cds" ON "cds"."artist" = "me"."artistid"
+      GROUP BY "me"."artistid", "me"."name", "me"."rank", "me"."charfield"
+      ORDER BY "amount_of_cds" DESC
     )',
     [],
   );
@@ -124,13 +124,13 @@ throws_ok(
   is_same_sql_bind (
     $rs->as_query,
     '(
-      SELECT me.artistid, me.name, me.rank, me.charfield, COUNT( cds.cdid ) AS amount_of_cds
-        FROM artist me
-        LEFT JOIN cd cds
-          ON cds.artist = me.artistid
-      WHERE cds.title != ?
-      GROUP BY me.artistid, me.name, me.rank, me.charfield
-      ORDER BY amount_of_cds DESC
+      SELECT "me"."artistid", "me"."name", "me"."rank", "me"."charfield", COUNT( "cds"."cdid" ) AS "amount_of_cds"
+        FROM "artist" "me"
+        LEFT JOIN cd "cds"
+          ON "cds"."artist" = "me"."artistid"
+      WHERE "cds"."title" != ?
+      GROUP BY "me"."artistid", "me"."name", "me"."rank", "me"."charfield"
+      ORDER BY "amount_of_cds" DESC
     )',
     [
       [{
@@ -146,13 +146,13 @@ throws_ok(
     '(
       SELECT COUNT( * )
         FROM (
-          SELECT me.artistid, me.name, me.rank, me.charfield
-            FROM artist me
-            LEFT JOIN cd cds
-              ON cds.artist = me.artistid
-          WHERE cds.title != ?
-          GROUP BY me.artistid, me.name, me.rank, me.charfield
-        ) me
+          SELECT "me"."artistid", "me"."name", "me"."rank", "me"."charfield"
+            FROM "artist" "me"
+            LEFT JOIN cd "cds"
+              ON "cds"."artist" = "me"."artistid"
+          WHERE "cds"."title" != ?
+          GROUP BY "me"."artistid", "me"."name", "me"."rank", "me"."charfield"
+        ) "me"
     )',
     [
       [{

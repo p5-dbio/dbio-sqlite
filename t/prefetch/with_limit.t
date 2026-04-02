@@ -52,32 +52,32 @@ is_same_sql_bind (
   $use_prefetch->as_query,
   '(
     SELECT  me.artistid + ?,
-            me.artistid, me.name,
-            cds.cdid, cds.artist, cds.title, cds.year, cds.genreid, cds.single_track
+            "me"."artistid", "me"."name",
+            "cds"."cdid", "cds"."artist", "cds"."title", "cds"."year", "cds"."genreid", "cds"."single_track"
       FROM (
         SELECT me.artistid + ?,
-               me.artistid, me.name
-          FROM artist me
-          LEFT JOIN cd cds
-            ON cds.artist = me.artistid
-          LEFT JOIN cd_artwork artwork
-            ON artwork.cd_id = cds.cdid
-          LEFT JOIN track tracks
-            ON tracks.cd = cds.cdid
-        WHERE   artwork.cd_id IS NULL
-             OR tracks.title != ?
-        GROUP BY me.artistid + ?, me.artistid, me.name
-        ORDER BY name DESC LIMIT ?
-      ) me
-      LEFT JOIN cd cds
-        ON cds.artist = me.artistid
-      LEFT JOIN cd_artwork artwork
-        ON artwork.cd_id = cds.cdid
-      LEFT JOIN track tracks
-        ON tracks.cd = cds.cdid
-    WHERE artwork.cd_id IS NULL
-       OR tracks.title != ?
-    ORDER BY name DESC
+               "me"."artistid", "me"."name"
+          FROM "artist" "me"
+          LEFT JOIN cd "cds"
+            ON "cds"."artist" = "me"."artistid"
+          LEFT JOIN "cd_artwork" "artwork"
+            ON "artwork"."cd_id" = "cds"."cdid"
+          LEFT JOIN "track" "tracks"
+            ON "tracks"."cd" = "cds"."cdid"
+        WHERE   "artwork"."cd_id" IS NULL
+             OR "tracks"."title" != ?
+        GROUP BY me.artistid + ?, "me"."artistid", "me"."name"
+        ORDER BY "name" DESC LIMIT ?
+      ) "me"
+      LEFT JOIN cd "cds"
+        ON "cds"."artist" = "me"."artistid"
+      LEFT JOIN "cd_artwork" "artwork"
+        ON "artwork"."cd_id" = "cds"."cdid"
+      LEFT JOIN "track" "tracks"
+        ON "tracks"."cd" = "cds"."cdid"
+    WHERE "artwork"."cd_id" IS NULL
+       OR "tracks"."title" != ?
+    ORDER BY "name" DESC
   )',
   [
     $bind_int_resolved->(),  # outer select
@@ -169,22 +169,22 @@ is_same_sql_bind (
   $single_prefetch_rs->as_query,
   '(
     SELECT
-        me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track,
-        tracks.trackid, tracks.cd, tracks.position, tracks.title, tracks.last_updated_on, tracks.last_updated_at,
-        artist.artistid, artist.name, artist.rank, artist.charfield
+        "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track",
+        "tracks"."trackid", "tracks"."cd", "tracks"."position", "tracks"."title", "tracks"."last_updated_on", "tracks"."last_updated_at",
+        "artist"."artistid", "artist"."name", "artist"."rank", "artist"."charfield"
       FROM (
         SELECT
-            me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-          FROM cd me
-          JOIN artist artist ON artist.artistid = me.artist
-        WHERE ( ( artist.name = ? AND me.year = ? ) )
+            "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track"
+          FROM cd "me"
+          JOIN "artist" "artist" ON "artist"."artistid" = "me"."artist"
+        WHERE ( ( "artist"."name" = ? AND "me"."year" = ? ) )
         LIMIT ?
-      ) me
-      LEFT JOIN track tracks
-        ON tracks.cd = me.cdid
-      JOIN artist artist
-        ON artist.artistid = me.artist
-    WHERE ( ( artist.name = ? AND me.year = ? ) )
+      ) "me"
+      LEFT JOIN "track" "tracks"
+        ON "tracks"."cd" = "me"."cdid"
+      JOIN "artist" "artist"
+        ON "artist"."artistid" = "me"."artist"
+    WHERE ( ( "artist"."name" = ? AND "me"."year" = ? ) )
   )',
   [
     [ { sqlt_datatype => 'varchar', sqlt_size => 100, dbic_colname => 'artist.name' } => 'foo' ],
@@ -205,27 +205,27 @@ my $many_one_many_rs = $schema->resultset('CD')->search({}, {
 is_same_sql_bind(
   $many_one_many_rs->as_query,
   '(
-    SELECT  me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track,
-            tracks.trackid, tracks.cd, tracks.position, tracks.title, tracks.last_updated_on, tracks.last_updated_at,
-            lyrics.lyric_id, lyrics.track_id, lyric_versions.id, lyric_versions.lyric_id, lyric_versions.text
+    SELECT  "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track",
+            "tracks"."trackid", "tracks"."cd", "tracks"."position", "tracks"."title", "tracks"."last_updated_on", "tracks"."last_updated_at",
+            "lyrics"."lyric_id", "lyrics"."track_id", "lyric_versions"."id", "lyric_versions"."lyric_id", "lyric_versions"."text"
       FROM (
-        SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-          FROM cd me
-          LEFT JOIN track tracks
-            ON tracks.cd = me.cdid
-          LEFT JOIN lyrics lyrics
-            ON lyrics.track_id = tracks.trackid
-        GROUP BY me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-        ORDER BY MIN(lyrics.track_id)
+        SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track"
+          FROM cd "me"
+          LEFT JOIN "track" "tracks"
+            ON "tracks"."cd" = "me"."cdid"
+          LEFT JOIN "lyrics" "lyrics"
+            ON "lyrics"."track_id" = "tracks"."trackid"
+        GROUP BY "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track"
+        ORDER BY MIN("lyrics"."track_id")
         LIMIT ?
-      ) me
-      LEFT JOIN track tracks
-        ON tracks.cd = me.cdid
-      LEFT JOIN lyrics lyrics
-        ON lyrics.track_id = tracks.trackid
-      LEFT JOIN lyric_versions lyric_versions
-        ON lyric_versions.lyric_id = lyrics.lyric_id
-    ORDER BY lyrics.track_id
+      ) "me"
+      LEFT JOIN "track" "tracks"
+        ON "tracks"."cd" = "me"."cdid"
+      LEFT JOIN "lyrics" "lyrics"
+        ON "lyrics"."track_id" = "tracks"."trackid"
+      LEFT JOIN "lyric_versions" "lyric_versions"
+        ON "lyric_versions"."lyric_id" = "lyrics"."lyric_id"
+    ORDER BY "lyrics"."track_id"
   )',
   [
     [ { sqlt_datatype => 'integer' } => 2 ]
@@ -247,27 +247,27 @@ my $cond_on_multi_ord_by_single = $schema->resultset('CD')->search(
 is_same_sql_bind(
   $cond_on_multi_ord_by_single->as_query,
   '(
-    SELECT  me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track,
-            tracks.trackid, tracks.cd, tracks.position, tracks.title, tracks.last_updated_on, tracks.last_updated_at,
-            artist.artistid, artist.name, artist.rank, artist.charfield
+    SELECT  "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track",
+            "tracks"."trackid", "tracks"."cd", "tracks"."position", "tracks"."title", "tracks"."last_updated_on", "tracks"."last_updated_at",
+            "artist"."artistid", "artist"."name", "artist"."rank", "artist"."charfield"
       FROM (
-        SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-          FROM cd me
-          LEFT JOIN track tracks
-            ON tracks.cd = me.cdid
-          JOIN artist artist
-            ON artist.artistid = me.artist
-        WHERE tracks.position != ?
-        GROUP BY me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track, artist.name
-        ORDER BY artist.name
+        SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track"
+          FROM cd "me"
+          LEFT JOIN "track" "tracks"
+            ON "tracks"."cd" = "me"."cdid"
+          JOIN "artist" "artist"
+            ON "artist"."artistid" = "me"."artist"
+        WHERE "tracks"."position" != ?
+        GROUP BY "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track", "artist"."name"
+        ORDER BY "artist"."name"
         LIMIT ?
-      ) me
-      LEFT JOIN track tracks
-        ON tracks.cd = me.cdid
-      JOIN artist artist
-        ON artist.artistid = me.artist
-    WHERE tracks.position != ?
-    ORDER BY artist.name
+      ) "me"
+      LEFT JOIN "track" "tracks"
+        ON "tracks"."cd" = "me"."cdid"
+      JOIN "artist" "artist"
+        ON "artist"."artistid" = "me"."artist"
+    WHERE "tracks"."position" != ?
+    ORDER BY "artist"."name"
   )',
   [
     [ { dbic_colname => "tracks.position", sqlt_datatype => "int" }

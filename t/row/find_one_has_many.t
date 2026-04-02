@@ -15,10 +15,10 @@ $schema->is_executed_sql_bind(sub {
   my $find_cd = $artist->find_related('cds',{title => 'Compilation from 1975'});
 }, [
   [
-    ' SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-        FROM cd me
-      WHERE me.artist = ? AND me.title = ?
-      ORDER BY year ASC
+    ' SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track"
+        FROM cd "me"
+      WHERE "me"."artist" = ? AND "me"."title" = ?
+      ORDER BY "year" ASC
     ',
     [ { dbic_colname => "me.artist", sqlt_datatype => "integer" }
       => 21 ],

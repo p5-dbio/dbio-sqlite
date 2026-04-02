@@ -25,13 +25,13 @@ my $book_rs = $schema->resultset ('BooksInLibrary')->search ({}, { join => 'owne
 
 is_same_sql_bind (
   $book_rs->as_subselect_rs->as_query,
-  '(SELECT me.id, me.source, me.owner, me.title, me.price
+  '(SELECT "me"."id", "me"."source", "me"."owner", "me"."title", "me"."price"
       FROM (
-        SELECT me.id, me.source, me.owner, me.title, me.price
-          FROM books me
-          JOIN owners owner ON owner.id = me.owner
-        WHERE ( source = ? )
-      ) me
+        SELECT "me"."id", "me"."source", "me"."owner", "me"."title", "me"."price"
+          FROM "books" "me"
+          JOIN "owners" "owner" ON "owner"."id" = "me"."owner"
+        WHERE ( "source" = ? )
+      ) "me"
   )',
   [ [ { sqlt_datatype => 'varchar', sqlt_size => 100, dbic_colname => 'source' }
       => 'Library' ] ],
@@ -54,14 +54,14 @@ is_same_sql_bind(
   '(
     SELECT COUNT( * )
       FROM (
-        SELECT artist.name AS artist__name, (SELECT COUNT(*) FROM cds WHERE cd.artist = artist.id), genre.name AS genre__name, me.title, me.year
-          FROM cd me
-          LEFT JOIN genre genre
-            ON genre.genreid = me.genreid
-          JOIN artist artist ON artist.artistid = me.artist
-        GROUP BY artist.name, (SELECT COUNT(*) FROM cds WHERE cd.artist = artist.id), genre.name, me.title, me.year
+        SELECT "artist"."name" AS "artist__name", (SELECT COUNT(*) FROM cds WHERE cd.artist = artist.id), "genre"."name" AS "genre__name", "me"."title", "me"."year"
+          FROM cd "me"
+          LEFT JOIN "genre" "genre"
+            ON "genre"."genreid" = "me"."genreid"
+          JOIN "artist" "artist" ON "artist"."artistid" = "me"."artist"
+        GROUP BY "artist"."name", (SELECT COUNT(*) FROM cds WHERE cd.artist = artist.id), "genre"."name", "me"."title", "me"."year"
         LIMIT ?
-      ) me
+      ) "me"
   )',
   [ [{ sqlt_datatype => 'integer' } => 2 ] ],
 );

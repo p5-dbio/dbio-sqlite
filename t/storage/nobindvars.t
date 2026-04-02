@@ -36,7 +36,7 @@ $schema->is_executed_sql_bind( sub {
   $it->next;
   is( $it->next, undef, "next past end of resultset ok" );
 }, [
-  [ 'SELECT me.artistid, me.name, me.rank, me.charfield FROM artist me ORDER BY artistid LIMIT 3 OFFSET 2' ],
+  [ 'SELECT "me"."artistid", "me"."name", "me"."rank", "me"."charfield" FROM "artist" "me" ORDER BY "artistid" LIMIT 3 OFFSET 2' ],
 ], 'Correctly interpolated SQL' );
 
 done_testing;

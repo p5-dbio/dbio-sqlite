@@ -31,10 +31,10 @@ my $schema = DBIO::SQLite::Test->init_schema();
     is ($rs->count, 2, 'Correct count via count()');
   }, [[
     'SELECT COUNT( * )
-      FROM cd me
-      JOIN track tracks ON tracks.cd = me.cdid
-      JOIN cd disc ON disc.cdid = tracks.cd
-     WHERE ( ( position = ? OR position = ? ) )
+      FROM cd "me"
+      JOIN "track" "tracks" ON "tracks"."cd" = "me"."cdid"
+      JOIN cd "disc" ON "disc"."cdid" = "tracks"."cd"
+     WHERE ( ( "position" = ? OR "position" = ? ) )
     ', @wherebind
   ]], 'count softlimit applied');
 
@@ -45,13 +45,13 @@ my $schema = DBIO::SQLite::Test->init_schema();
     $crs->as_query,
     '(SELECT COUNT( * )
        FROM (
-        SELECT tracks.trackid
-          FROM cd me
-          JOIN track tracks ON tracks.cd = me.cdid
-          JOIN cd disc ON disc.cdid = tracks.cd
-        WHERE ( ( position = ? OR position = ? ) )
+        SELECT "tracks"."trackid"
+          FROM cd "me"
+          JOIN "track" "tracks" ON "tracks"."cd" = "me"."cdid"
+          JOIN cd "disc" ON "disc"."cdid" = "tracks"."cd"
+        WHERE ( ( "position" = ? OR "position" = ? ) )
         LIMIT ? OFFSET ?
-       ) tracks
+       ) "tracks"
     )',
     [ @wherebind, [$ROWS => 3], [$OFFSET => 8] ],
     'count_rs db-side limit applied',
@@ -79,14 +79,14 @@ my $schema = DBIO::SQLite::Test->init_schema();
   }, [ [
     'SELECT COUNT( * )
       FROM (
-        SELECT cds.cdid
-          FROM artist me
-          JOIN cd cds ON cds.artist = me.artistid
-          LEFT JOIN track tracks ON tracks.cd = cds.cdid
-          JOIN artist artist ON artist.artistid = cds.artist
-        WHERE tracks.position = ? OR tracks.position = ?
-        GROUP BY cds.cdid
-      ) cds
+        SELECT "cds"."cdid"
+          FROM "artist" "me"
+          JOIN cd "cds" ON "cds"."artist" = "me"."artistid"
+          LEFT JOIN "track" "tracks" ON "tracks"."cd" = "cds"."cdid"
+          JOIN "artist" "artist" ON "artist"."artistid" = "cds"."artist"
+        WHERE "tracks"."position" = ? OR "tracks"."position" = ?
+        GROUP BY "cds"."cdid"
+      ) "cds"
     ', @wherebind
   ]], 'count softlimit applied' );
 
@@ -97,15 +97,15 @@ my $schema = DBIO::SQLite::Test->init_schema();
     $crs->as_query,
     '(SELECT COUNT( * )
       FROM (
-        SELECT cds.cdid
-          FROM artist me
-          JOIN cd cds ON cds.artist = me.artistid
-          LEFT JOIN track tracks ON tracks.cd = cds.cdid
-          JOIN artist artist ON artist.artistid = cds.artist
-        WHERE tracks.position = ? OR tracks.position = ?
-        GROUP BY cds.cdid
+        SELECT "cds"."cdid"
+          FROM "artist" "me"
+          JOIN cd "cds" ON "cds"."artist" = "me"."artistid"
+          LEFT JOIN "track" "tracks" ON "tracks"."cd" = "cds"."cdid"
+          JOIN "artist" "artist" ON "artist"."artistid" = "cds"."artist"
+        WHERE "tracks"."position" = ? OR "tracks"."position" = ?
+        GROUP BY "cds"."cdid"
         LIMIT ? OFFSET ?
-      ) cds
+      ) "cds"
     )',
     [ @wherebind, [$ROWS => 3], [$OFFSET => 4], ],
     'count_rs db-side limit applied',
@@ -131,12 +131,12 @@ my $schema = DBIO::SQLite::Test->init_schema();
     $crs->as_query,
     '(SELECT COUNT( * )
       FROM (
-        SELECT me.artistid, MAX( cds.year ) AS newest_cd_year
-          FROM artist me
-          LEFT JOIN cd cds ON cds.artist = me.artistid
-        GROUP BY me.artistid
-        HAVING newest_cd_year = ?
-      ) me
+        SELECT "me"."artistid", MAX( "cds"."year" ) AS "newest_cd_year"
+          FROM "artist" "me"
+          LEFT JOIN cd "cds" ON "cds"."artist" = "me"."artistid"
+        GROUP BY "me"."artistid"
+        HAVING "newest_cd_year" = ?
+      ) "me"
     )',
     [ [ { dbic_colname => 'newest_cd_year' }
           => '2001' ] ],
@@ -165,12 +165,12 @@ my $schema = DBIO::SQLite::Test->init_schema();
     $crs->as_query,
     '(SELECT COUNT( * )
       FROM (
-        SELECT me.artistid, MAX( cds.year ) AS newest_cd_year
-          FROM artist me
-          LEFT JOIN cd cds ON cds.artist = me.artistid
-        GROUP BY me.artistid
-        HAVING newest_cd_year = ? OR newest_cd_year = ?
-      ) me
+        SELECT "me"."artistid", MAX( "cds"."year" ) AS "newest_cd_year"
+          FROM "artist" "me"
+          LEFT JOIN cd "cds" ON "cds"."artist" = "me"."artistid"
+        GROUP BY "me"."artistid"
+        HAVING "newest_cd_year" = ? OR "newest_cd_year" = ?
+      ) "me"
     )',
     [
       [ { dbic_colname => 'newest_cd_year' }

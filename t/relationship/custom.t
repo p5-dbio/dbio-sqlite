@@ -37,9 +37,9 @@ my $cds_80s_rs = $artist->cds_80s;
 is_same_sql_bind(
   $cds_80s_rs->as_query,
   '(
-    SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-      FROM cd me
-    WHERE ( ( me.artist = ? AND ( me.year < ? AND me.year > ? ) ) )
+    SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track"
+      FROM cd "me"
+    WHERE ( ( "me"."artist" = ? AND ( "me"."year" < ? AND "me"."year" > ? ) ) )
   )',
   [
     [
@@ -65,11 +65,11 @@ my $cds_90s_rs = $artist2->cds_90s;
 is_same_sql_bind(
   $cds_90s_rs->as_query,
   '(
-    SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-      FROM artist artist__row
-      JOIN cd me
-        ON ( me.artist = artist__row.artistid AND ( me.year < ? AND me.year > ? ) )
-      WHERE ( artist__row.artistid = ? )
+    SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track"
+      FROM "artist" "artist__row"
+      JOIN cd "me"
+        ON ( "me"."artist" = "artist__row"."artistid" AND ( "me"."year" < ? AND "me"."year" > ? ) )
+      WHERE ( "artist__row"."artistid" = ? )
   )',
   [
     [
@@ -95,11 +95,11 @@ is_same_sql_bind(
   is_same_sql_bind(
     $artist2->cds_90s->as_query,
     '(
-      SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-        FROM artist ar_tist__row
-        JOIN cd me
-          ON ( me.artist = ar_tist__row.artistid AND ( me.year < ? AND me.year > ? ) )
-        WHERE ( ar_tist__row.artistid = ? )
+      SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track"
+        FROM "artist" "ar_tist__row"
+        JOIN cd "me"
+          ON ( "me"."artist" = "ar_tist__row"."artistid" AND ( "me"."year" < ? AND "me"."year" > ? ) )
+        WHERE ( "ar_tist__row"."artistid" = ? )
     )',
     [
       [
@@ -301,11 +301,11 @@ warnings_exist {
   is_same_sql_bind(
     $single_track->deliberately_broken_all_cd_tracks->as_query,
     '(
-      SELECT me.trackid, me.cd, me.position, me.title, me.last_updated_on, me.last_updated_at
-        FROM track track__row
-        JOIN track me
-          ON me.cd = ?
-      WHERE track__row.trackid = ?
+      SELECT "me"."trackid", "me"."cd", "me"."position", "me"."title", "me"."last_updated_on", "me"."last_updated_at"
+        FROM "track" "track__row"
+        JOIN "track" "me"
+          ON "me"."cd" = ?
+      WHERE "track__row"."trackid" = ?
     )',
     [
       [{ dbic_colname => "me.cd", sqlt_datatype => "integer" }

@@ -92,7 +92,7 @@ $rs = $schema->resultset('Tag')->search(
 cmp_ok( $rs->count, '>=', 0, 'nested prefetch does not duplicate joins' );
 
 my ($artist) = $schema->resultset("Artist")->search({ 'cds.year' => 2001 },
-                 { order_by => 'artistid DESC', join => 'cds' });
+                 { order_by => { -desc => 'artistid' }, join => 'cds' });
 
 is($artist->name, 'Random Boy Band', "Join search by object ok");
 
@@ -132,7 +132,7 @@ $rs = $schema->resultset("Artist")->search({}, {
 
 cmp_ok( $rs->all, '==', 2, "results ok after group_by on related column with a having" );
 
-$rs = $rs->search( undef, {  having =>{ 'count(*)'=> \'> 2' }});
+$rs = $rs->search( undef, { having => \[ 'count(*) > ?', 2 ] });
 
 cmp_ok( $rs->all, '==', 1, "count() ok after group_by on related column with a having" );
 

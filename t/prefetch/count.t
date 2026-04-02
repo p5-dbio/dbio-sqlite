@@ -62,11 +62,11 @@ is_same_sql_bind (
   $tracks->count_rs->as_query,
   '(
     SELECT COUNT( * )
-      FROM artist me
-      LEFT JOIN twokeys twokeys ON twokeys.artist = me.artistid
-      JOIN cd cds ON cds.artist = me.artistid
-      JOIN track tracks ON tracks.cd = cds.cdid
-    WHERE ( me.artistid = ? )
+      FROM "artist" "me"
+      LEFT JOIN "twokeys" "twokeys" ON "twokeys"."artist" = "me"."artistid"
+      JOIN cd "cds" ON "cds"."artist" = "me"."artistid"
+      JOIN "track" "tracks" ON "tracks"."cd" = "cds"."cdid"
+    WHERE ( "me"."artistid" = ? )
   )',
   [ [ { sqlt_datatype => 'integer', dbic_colname => 'me.artistid' }
       => 4 ] ],

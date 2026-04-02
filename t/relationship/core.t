@@ -247,11 +247,11 @@ is($undir_maps->count, 1, 'found 1 undirected map for artist 1');
 is_same_sql_bind (
   $undir_maps->as_query,
   '(
-    SELECT artist_undirected_maps.id1, artist_undirected_maps.id2
-      FROM artist me
-      JOIN artist_undirected_map artist_undirected_maps
-        ON artist_undirected_maps.id1 = me.artistid OR artist_undirected_maps.id2 = me.artistid
-    WHERE ( artistid = ? )
+    SELECT "artist_undirected_maps"."id1", "artist_undirected_maps"."id2"
+      FROM "artist" "me"
+      JOIN "artist_undirected_map" "artist_undirected_maps"
+        ON "artist_undirected_maps"."id1" = "me"."artistid" OR "artist_undirected_maps"."id2" = "me"."artistid"
+    WHERE ( "artistid" = ? )
   )',
   [[ { sqlt_datatype => 'integer', dbic_colname => 'artistid' }
       => 1 ]],

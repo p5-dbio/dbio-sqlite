@@ -71,7 +71,7 @@ my $rs;
   $rs = $schema->resultset('Complex')->search({}, { bind => [ [{ sqlt_datatype => 'datetime'} => 1999 ] ] })->search({}, { where => \"title LIKE ?", bind => [ 'Spoon%' ] });
   is_same_sql_bind(
     $rs->as_query,
-    "(SELECT me.artistid, me.name, me.rank, me.charfield FROM (SELECT a.*, cd.cdid AS cdid, cd.title AS title, cd.year AS year FROM artist a JOIN cd ON cd.artist = a.artistid WHERE cd.year = ?) me WHERE title LIKE ?)",
+    "(SELECT \"me\".\"artistid\", \"me\".\"name\", \"me\".\"rank\", \"me\".\"charfield\" FROM (SELECT a.*, cd.cdid AS cdid, cd.title AS title, cd.year AS year FROM artist a JOIN cd ON cd.artist = a.artistid WHERE cd.year = ?) \"me\" WHERE title LIKE ?)",
     [
       [ { sqlt_datatype => 'datetime' } => '1999' ],
       [ {} => 'Spoon%' ]
@@ -100,7 +100,7 @@ my $rs;
   $rs = $schema->resultset('CustomSql')->search({}, { bind => [ 1999 ] })->search({}, { where => \"title LIKE ?", bind => [ 'Spoon%' ] });
   is_same_sql_bind(
     $rs->as_query,
-    "(SELECT me.artistid, me.name, me.rank, me.charfield FROM (SELECT a.*, cd.cdid AS cdid, cd.title AS title, cd.year AS year FROM artist a JOIN cd ON cd.artist = a.artistid WHERE cd.year = ?) me WHERE title LIKE ?)",
+    "(SELECT \"me\".\"artistid\", \"me\".\"name\", \"me\".\"rank\", \"me\".\"charfield\" FROM (SELECT a.*, cd.cdid AS cdid, cd.title AS title, cd.year AS year FROM artist a JOIN cd ON cd.artist = a.artistid WHERE cd.year = ?) \"me\" WHERE title LIKE ?)",
     [
       [ {} => '1999' ],
       [ {} => 'Spoon%' ]

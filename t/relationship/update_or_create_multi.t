@@ -83,16 +83,16 @@ $schema->is_executed_sql_bind( sub {
   });
 }, [
   [
-    'SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-        FROM cd me
-      WHERE ( me.artist = ? AND me.genreid = ? AND me.title = ? )
+    'SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track"
+        FROM cd "me"
+      WHERE ( "me"."artist" = ? AND "me"."genreid" = ? AND "me"."title" = ? )
     ',
     1,
     2,
     "the best thing since vertical toasters",
   ],
   [
-    'INSERT INTO cd ( artist, genreid, title, year) VALUES ( ?, ?, ?, ? )',
+    'INSERT INTO cd ( "artist", "genreid", "title", "year") VALUES ( ?, ?, ?, ? )',
     1,
     2,
     "the best thing since vertical toasters",

@@ -67,9 +67,9 @@ $schema->is_executed_sql_bind( sub {
   $fks->update ({ read_count => \ 'read_count + 1' });
   $read_count_inc++;
 }, [[
-  'UPDATE fourkeys
-   SET read_count = read_count + 1
-   WHERE ( ( ( bar = ? OR bar = ? ) AND ( foo = ? OR foo = ? ) AND ( goodbye = ? OR goodbye = ? ) AND ( hello = ? OR hello = ? ) AND sensors != ? ) )
+  'UPDATE "fourkeys"
+   SET "read_count" = read_count + 1
+   WHERE ( ( ( "bar" = ? OR "bar" = ? ) AND ( "foo" = ? OR "foo" = ? ) AND ( "goodbye" = ? OR "goodbye" = ? ) AND ( "hello" = ? OR "hello" = ? ) AND "sensors" != ? ) )
   ',
   (1, 2) x 4,
   'c',
@@ -119,19 +119,19 @@ my $fks_multi = $fks->search(
       $force_use_mci
         ?(
           [
-            'UPDATE fourkeys
-             SET read_count = read_count + 1
+            'UPDATE "fourkeys"
+             SET "read_count" = read_count + 1
              WHERE
-              (foo, bar, hello, goodbye) IN (
-                SELECT me.foo, me.bar, me.hello, me.goodbye
-                  FROM fourkeys me
-                  LEFT JOIN fourkeys_to_twokeys fourkeys_to_twokeys ON
-                        fourkeys_to_twokeys.f_bar = me.bar
-                    AND fourkeys_to_twokeys.f_foo = me.foo
-                    AND fourkeys_to_twokeys.f_goodbye = me.goodbye
-                    AND fourkeys_to_twokeys.f_hello = me.hello
-                WHERE ( bar = ? OR bar = ? ) AND ( foo = ? OR foo = ? ) AND fourkeys_to_twokeys.pilot_sequence != ? AND ( goodbye = ? OR goodbye = ? ) AND ( hello = ? OR hello = ? ) AND sensors != ?
-                ORDER BY foo, bar, hello, goodbye
+              ("foo", "bar", "hello", "goodbye") IN (
+                SELECT "me"."foo", "me"."bar", "me"."hello", "me"."goodbye"
+                  FROM "fourkeys" "me"
+                  LEFT JOIN "fourkeys_to_twokeys" "fourkeys_to_twokeys" ON
+                        "fourkeys_to_twokeys"."f_bar" = "me"."bar"
+                    AND "fourkeys_to_twokeys"."f_foo" = "me"."foo"
+                    AND "fourkeys_to_twokeys"."f_goodbye" = "me"."goodbye"
+                    AND "fourkeys_to_twokeys"."f_hello" = "me"."hello"
+                WHERE ( "bar" = ? OR "bar" = ? ) AND ( "foo" = ? OR "foo" = ? ) AND "fourkeys_to_twokeys"."pilot_sequence" != ? AND ( "goodbye" = ? OR "goodbye" = ? ) AND ( "hello" = ? OR "hello" = ? ) AND "sensors" != ?
+                ORDER BY "foo", "bar", "hello", "goodbye"
               )
             ',
             ( 1, 2) x 2,
@@ -143,13 +143,13 @@ my $fks_multi = $fks->search(
         :(
           [ 'BEGIN' ],
           [
-            'SELECT me.foo, me.bar, me.hello, me.goodbye
-              FROM fourkeys me
-              LEFT JOIN fourkeys_to_twokeys fourkeys_to_twokeys
-                ON fourkeys_to_twokeys.f_bar = me.bar AND fourkeys_to_twokeys.f_foo = me.foo AND fourkeys_to_twokeys.f_goodbye = me.goodbye AND fourkeys_to_twokeys.f_hello = me.hello
-              WHERE ( bar = ? OR bar = ? ) AND ( foo = ? OR foo = ? ) AND fourkeys_to_twokeys.pilot_sequence != ? AND ( goodbye = ? OR goodbye = ? ) AND ( hello = ? OR hello = ? ) AND sensors != ?
-              GROUP BY me.foo, me.bar, me.hello, me.goodbye
-              ORDER BY foo, bar, hello, goodbye
+            'SELECT "me"."foo", "me"."bar", "me"."hello", "me"."goodbye"
+              FROM "fourkeys" "me"
+              LEFT JOIN "fourkeys_to_twokeys" "fourkeys_to_twokeys"
+                ON "fourkeys_to_twokeys"."f_bar" = "me"."bar" AND "fourkeys_to_twokeys"."f_foo" = "me"."foo" AND "fourkeys_to_twokeys"."f_goodbye" = "me"."goodbye" AND "fourkeys_to_twokeys"."f_hello" = "me"."hello"
+              WHERE ( "bar" = ? OR "bar" = ? ) AND ( "foo" = ? OR "foo" = ? ) AND "fourkeys_to_twokeys"."pilot_sequence" != ? AND ( "goodbye" = ? OR "goodbye" = ? ) AND ( "hello" = ? OR "hello" = ? ) AND "sensors" != ?
+              GROUP BY "me"."foo", "me"."bar", "me"."hello", "me"."goodbye"
+              ORDER BY "foo", "bar", "hello", "goodbye"
             ',
             (1, 2) x 2,
             666,
@@ -157,9 +157,9 @@ my $fks_multi = $fks->search(
             'c',
           ],
           [
-            'UPDATE fourkeys
-             SET read_count = read_count + 1
-             WHERE ( bar = ? AND foo = ? AND goodbye = ? AND hello = ? ) OR ( bar = ? AND foo = ? AND goodbye = ? AND hello = ? )
+            'UPDATE "fourkeys"
+             SET "read_count" = read_count + 1
+             WHERE ( "bar" = ? AND "foo" = ? AND "goodbye" = ? AND "hello" = ? ) OR ( "bar" = ? AND "foo" = ? AND "goodbye" = ? AND "hello" = ? )
             ',
             ( (1) x 4, (2) x 4 ),
           ],
@@ -190,30 +190,30 @@ my $fks_multi = $fks->search(
       $force_use_mci
         ? (
           [
-            'DELETE FROM fourkeys
-              WHERE ( foo, bar, hello, goodbye ) IN (
-                SELECT me.foo, me.bar, me.hello, me.goodbye
-                  FROM fourkeys me
-                  LEFT JOIN fourkeys_to_twokeys fourkeys_to_twokeys
-                    ON    fourkeys_to_twokeys.f_bar = me.bar
-                      AND fourkeys_to_twokeys.f_foo = me.foo
-                      AND fourkeys_to_twokeys.f_goodbye = me.goodbye
-                      AND fourkeys_to_twokeys.f_hello = me.hello
+            'DELETE FROM "fourkeys"
+              WHERE ( "foo", "bar", "hello", "goodbye" ) IN (
+                SELECT "me"."foo", "me"."bar", "me"."hello", "me"."goodbye"
+                  FROM "fourkeys" "me"
+                  LEFT JOIN "fourkeys_to_twokeys" "fourkeys_to_twokeys"
+                    ON    "fourkeys_to_twokeys"."f_bar" = "me"."bar"
+                      AND "fourkeys_to_twokeys"."f_foo" = "me"."foo"
+                      AND "fourkeys_to_twokeys"."f_goodbye" = "me"."goodbye"
+                      AND "fourkeys_to_twokeys"."f_hello" = "me"."hello"
                 WHERE
                   "blah" = "bleh"
                     AND
-                  ( bar = ? OR bar = ? )
+                  ( "bar" = ? OR "bar" = ? )
                     AND
-                  ( foo = ? OR foo = ? )
+                  ( "foo" = ? OR "foo" = ? )
                     AND
-                  fourkeys_to_twokeys.pilot_sequence != ?
+                  "fourkeys_to_twokeys"."pilot_sequence" != ?
                     AND
-                  ( goodbye = ? OR goodbye = ? )
+                  ( "goodbye" = ? OR "goodbye" = ? )
                     AND
-                  ( hello = ? OR hello = ? )
+                  ( "hello" = ? OR "hello" = ? )
                     AND
-                  sensors != ?
-                ORDER BY foo, bar, hello, goodbye
+                  "sensors" != ?
+                ORDER BY "foo", "bar", "hello", "goodbye"
             )',
             (1, 2) x 2,
             666,
@@ -224,13 +224,13 @@ my $fks_multi = $fks->search(
         : (
           [ 'BEGIN' ],
           [
-            'SELECT me.foo, me.bar, me.hello, me.goodbye
-              FROM fourkeys me
-              LEFT JOIN fourkeys_to_twokeys fourkeys_to_twokeys
-                ON fourkeys_to_twokeys.f_bar = me.bar AND fourkeys_to_twokeys.f_foo = me.foo AND fourkeys_to_twokeys.f_goodbye = me.goodbye AND fourkeys_to_twokeys.f_hello = me.hello
-              WHERE "blah" = "bleh" AND ( bar = ? OR bar = ? ) AND ( foo = ? OR foo = ? ) AND fourkeys_to_twokeys.pilot_sequence != ? AND ( goodbye = ? OR goodbye = ? ) AND ( hello = ? OR hello = ? ) AND sensors != ?
-              GROUP BY me.foo, me.bar, me.hello, me.goodbye
-              ORDER BY foo, bar, hello, goodbye
+            'SELECT "me"."foo", "me"."bar", "me"."hello", "me"."goodbye"
+              FROM "fourkeys" "me"
+              LEFT JOIN "fourkeys_to_twokeys" "fourkeys_to_twokeys"
+                ON "fourkeys_to_twokeys"."f_bar" = "me"."bar" AND "fourkeys_to_twokeys"."f_foo" = "me"."foo" AND "fourkeys_to_twokeys"."f_goodbye" = "me"."goodbye" AND "fourkeys_to_twokeys"."f_hello" = "me"."hello"
+              WHERE "blah" = "bleh" AND ( "bar" = ? OR "bar" = ? ) AND ( "foo" = ? OR "foo" = ? ) AND "fourkeys_to_twokeys"."pilot_sequence" != ? AND ( "goodbye" = ? OR "goodbye" = ? ) AND ( "hello" = ? OR "hello" = ? ) AND "sensors" != ?
+              GROUP BY "me"."foo", "me"."bar", "me"."hello", "me"."goodbye"
+              ORDER BY "foo", "bar", "hello", "goodbye"
             ',
             (1, 2) x 2,
             666,
@@ -264,18 +264,18 @@ my $fks_multi = $fks->search(
       $force_use_mci
         ? (
           [
-            'UPDATE fourkeys SET read_count = read_count + 1
-              WHERE ( foo, bar, hello, goodbye ) IN (
-                SELECT me.foo, me.bar, me.hello, me.goodbye
-                  FROM fourkeys me
-                    LEFT JOIN fourkeys_to_twokeys fourkeys_to_twokeys ON
-                          fourkeys_to_twokeys.f_bar = me.bar
-                      AND fourkeys_to_twokeys.f_foo = me.foo
-                      AND fourkeys_to_twokeys.f_goodbye = me.goodbye
-                      AND fourkeys_to_twokeys.f_hello = me.hello
-                    LEFT JOIN twokeys twokeys
-                      ON twokeys.artist = fourkeys_to_twokeys.t_artist AND twokeys.cd = fourkeys_to_twokeys.t_cd
-                    WHERE ( bar = ? OR bar = ? ) AND ( foo = ? OR foo = ? ) AND ( goodbye = ? OR goodbye = ? ) AND ( hello = ? OR hello = ? ) AND sensors != ? AND twokeys.artist != ?
+            'UPDATE "fourkeys" SET "read_count" = read_count + 1
+              WHERE ( "foo", "bar", "hello", "goodbye" ) IN (
+                SELECT "me"."foo", "me"."bar", "me"."hello", "me"."goodbye"
+                  FROM "fourkeys" "me"
+                    LEFT JOIN "fourkeys_to_twokeys" "fourkeys_to_twokeys" ON
+                          "fourkeys_to_twokeys"."f_bar" = "me"."bar"
+                      AND "fourkeys_to_twokeys"."f_foo" = "me"."foo"
+                      AND "fourkeys_to_twokeys"."f_goodbye" = "me"."goodbye"
+                      AND "fourkeys_to_twokeys"."f_hello" = "me"."hello"
+                    LEFT JOIN "twokeys" "twokeys"
+                      ON "twokeys"."artist" = "fourkeys_to_twokeys"."t_artist" AND "twokeys"."cd" = "fourkeys_to_twokeys"."t_cd"
+                    WHERE ( "bar" = ? OR "bar" = ? ) AND ( "foo" = ? OR "foo" = ? ) AND ( "goodbye" = ? OR "goodbye" = ? ) AND ( "hello" = ? OR "hello" = ? ) AND "sensors" != ? AND "twokeys"."artist" != ?
             )',
             (1, 2) x 4,
             'c',
@@ -285,23 +285,23 @@ my $fks_multi = $fks->search(
         : (
           [ 'BEGIN' ],
           [
-            'SELECT me.foo, me.bar, me.hello, me.goodbye
-              FROM fourkeys me
-              LEFT JOIN fourkeys_to_twokeys fourkeys_to_twokeys
-                ON fourkeys_to_twokeys.f_bar = me.bar AND fourkeys_to_twokeys.f_foo = me.foo AND fourkeys_to_twokeys.f_goodbye = me.goodbye AND fourkeys_to_twokeys.f_hello = me.hello
-              LEFT JOIN twokeys twokeys
-                ON twokeys.artist = fourkeys_to_twokeys.t_artist AND twokeys.cd = fourkeys_to_twokeys.t_cd
-              WHERE ( bar = ? OR bar = ? ) AND ( foo = ? OR foo = ? ) AND ( goodbye = ? OR goodbye = ? ) AND ( hello = ? OR hello = ? ) AND sensors != ? AND twokeys.artist != ?
-              GROUP BY me.foo, me.bar, me.hello, me.goodbye
+            'SELECT "me"."foo", "me"."bar", "me"."hello", "me"."goodbye"
+              FROM "fourkeys" "me"
+              LEFT JOIN "fourkeys_to_twokeys" "fourkeys_to_twokeys"
+                ON "fourkeys_to_twokeys"."f_bar" = "me"."bar" AND "fourkeys_to_twokeys"."f_foo" = "me"."foo" AND "fourkeys_to_twokeys"."f_goodbye" = "me"."goodbye" AND "fourkeys_to_twokeys"."f_hello" = "me"."hello"
+              LEFT JOIN "twokeys" "twokeys"
+                ON "twokeys"."artist" = "fourkeys_to_twokeys"."t_artist" AND "twokeys"."cd" = "fourkeys_to_twokeys"."t_cd"
+              WHERE ( "bar" = ? OR "bar" = ? ) AND ( "foo" = ? OR "foo" = ? ) AND ( "goodbye" = ? OR "goodbye" = ? ) AND ( "hello" = ? OR "hello" = ? ) AND "sensors" != ? AND "twokeys"."artist" != ?
+              GROUP BY "me"."foo", "me"."bar", "me"."hello", "me"."goodbye"
             ',
             (1, 2) x 4,
             'c',
             666,
           ],
           [
-            'UPDATE fourkeys
-             SET read_count = read_count + 1
-             WHERE ( bar = ? AND foo = ? AND goodbye = ? AND hello = ? ) OR ( bar = ? AND foo = ? AND goodbye = ? AND hello = ? )
+            'UPDATE "fourkeys"
+             SET "read_count" = read_count + 1
+             WHERE ( "bar" = ? AND "foo" = ? AND "goodbye" = ? AND "hello" = ? ) OR ( "bar" = ? AND "foo" = ? AND "goodbye" = ? AND "hello" = ? )
             ',
             ( (1) x 4, (2) x 4 ),
           ],
@@ -415,21 +415,21 @@ is ($tkfks->count, $tkfk_cnt -= 1, 'Only one row deleted');
   $schema->is_executed_sql_bind( sub {
     $rs->search({}, { join => 'liner_notes' })->delete;
   }, [[
-    'DELETE FROM cd WHERE ( year != ? )',
+    'DELETE FROM "cd" WHERE ( "year" != ? )',
     2010,
   ]], 'Non-restricting multijoins properly thrown out' );
 
   $schema->is_executed_sql_bind( sub {
     $rs->search({}, { prefetch => 'liner_notes' })->delete;
   }, [[
-    'DELETE FROM cd WHERE ( year != ? )',
+    'DELETE FROM "cd" WHERE ( "year" != ? )',
     2010,
   ]], 'Non-restricting multiprefetch thrown out' );
 
   $schema->is_executed_sql_bind( sub {
     $rs->search({}, { prefetch => 'artist' })->delete;
   }, [[
-    'DELETE FROM cd WHERE ( cdid IN ( SELECT me.cdid FROM cd me JOIN artist artist ON artist.artistid = me.artist WHERE ( me.year != ? ) ) )',
+    'DELETE FROM "cd" WHERE ( "cdid" IN ( SELECT "me"."cdid" FROM "cd" "me" JOIN "artist" "artist" ON "artist"."artistid" = "me"."artist" WHERE ( "me"."year" != ? ) ) )',
     2010,
   ]], 'Restricting prefetch left in, selector thrown out');
 
@@ -448,7 +448,7 @@ is ($tkfks->count, $tkfk_cnt -= 1, 'Only one row deleted');
   $schema->is_executed_sql_bind( sub {
     $rs->delete
   }, [[
-    'DELETE FROM main.cd WHERE year != ?',
+    'DELETE FROM "main"."cd" WHERE "year" != ?',
     2010,
   ]], 'delete with fully qualified table name' );
 
@@ -458,11 +458,11 @@ is ($tkfks->count, $tkfk_cnt -= 1, 'Only one row deleted');
   }, [
     [ 'BEGIN' ],
     [
-      'SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track FROM main.cd me WHERE me.year != ?',
+      'SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track" FROM "main"."cd" "me" WHERE "me"."year" != ?',
       2010,
     ],
     [
-      'DELETE FROM main.cd WHERE ( cdid = ? )',
+      'DELETE FROM "main"."cd" WHERE ( "cdid" = ? )',
       1,
     ],
     [ 'COMMIT' ],
@@ -474,14 +474,14 @@ is ($tkfks->count, $tkfk_cnt -= 1, 'Only one row deleted');
   $schema->is_executed_sql_bind( sub {
     $cd42->delete
   }, [[
-    'DELETE FROM main.cd WHERE cdid = ?',
+    'DELETE FROM "main"."cd" WHERE "cdid" = ?',
     42,
   ]], 'delete of object from table with fully qualified name' );
 
   $schema->is_executed_sql_bind( sub {
     $cd42->related_resultset('artist')->delete
   }, [[
-    'DELETE FROM main.artist WHERE ( artistid IN ( SELECT me.artistid FROM main.artist me WHERE ( me.artistid = ? ) ) )',
+    'DELETE FROM main.artist WHERE "artistid" IN ( SELECT "me"."artistid" FROM main.artist "me" WHERE "me"."artistid" = ? )',
     2,
   ]], 'delete of related object from scalarref fully qualified named table' );
 
@@ -490,21 +490,21 @@ is ($tkfks->count, $tkfk_cnt -= 1, 'Only one row deleted');
   $schema->is_executed_sql_bind( sub {
     $art3->related_resultset('cds')->delete;
   }, [[
-    'DELETE FROM main.cd WHERE ( artist = ? )',
+    'DELETE FROM "main"."cd" WHERE "artist" = ?',
     3,
   ]], 'delete of related object from fully qualified named table' );
 
   $schema->is_executed_sql_bind( sub {
     $art3->cds_unordered->delete;
   }, [[
-    'DELETE FROM main.cd WHERE ( artist = ? )',
+    'DELETE FROM "main"."cd" WHERE "artist" = ?',
     3,
   ]], 'delete of related object from fully qualified named table via relaccessor' );
 
   $schema->is_executed_sql_bind( sub {
     $rs->search({}, { prefetch => 'artist' })->delete;
   }, [[
-    'DELETE FROM main.cd WHERE ( cdid IN ( SELECT me.cdid FROM main.cd me JOIN main.artist artist ON artist.artistid = me.artist WHERE ( me.year != ? ) ) )',
+    'DELETE FROM "main"."cd" WHERE ( "cdid" IN ( SELECT "me"."cdid" FROM "main"."cd" "me" JOIN main.artist "artist" ON "artist"."artistid" = "me"."artist" WHERE ( "me"."year" != ? ) ) )',
     2010,
   ]], 'delete with fully qualified table name and subquery correct' );
 
@@ -520,16 +520,16 @@ is ($tkfks->count, $tkfk_cnt -= 1, 'Only one row deleted');
     })->as_subselect_rs->delete;
   }, [[
     '
-      DELETE FROM main.cd
+      DELETE FROM "main"."cd"
       WHERE (
-        cdid IN (
-          SELECT me.cdid
+        "cdid" IN (
+          SELECT "me"."cdid"
             FROM (
-              SELECT me.cdid, me.artist, me.title, me.year, me.genreid, me.single_track
-                FROM main.cd me
-                JOIN main.artist artist ON artist.artistid = me.artist
-              WHERE artist.name = ? AND me.cdid = ?
-            ) me
+              SELECT "me"."cdid", "me"."artist", "me"."title", "me"."year", "me"."genreid", "me"."single_track"
+                FROM "main"."cd" "me"
+                JOIN main.artist "artist" ON "artist"."artistid" = "me"."artist"
+              WHERE "artist"."name" = ? AND "me"."cdid" = ?
+            ) "me"
         )
       )
     ',

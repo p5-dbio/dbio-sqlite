@@ -124,17 +124,17 @@ throws_ok(
   is_same_sql_bind(
     $pref_rs->as_query,
     '(
-      SELECT me.name, books.id, books.source, books.owner, books.title, books.price
+      SELECT "me"."name", "books"."id", "books"."source", "books"."owner", "books"."title", "books"."price"
         FROM (
-          SELECT me.name, me.id
-            FROM owners me
-          ORDER BY name
+          SELECT "me"."name", "me"."id"
+            FROM "owners" "me"
+          ORDER BY "name"
           LIMIT ?
           OFFSET ?
-        ) me
-        LEFT JOIN books books
-          ON books.owner = me.id
-      ORDER BY name
+        ) "me"
+        LEFT JOIN "books" "books"
+          ON "books"."owner" = "me"."id"
+      ORDER BY "name"
     )',
     [ [ { sqlt_datatype => "integer" } => 3 ], [ { sqlt_datatype => "integer" } => 1 ] ],
     'Expected SQL on complex limited prefetch with non-selected join condition',
@@ -172,17 +172,17 @@ throws_ok(
   is_same_sql_bind(
     $empty_ordered_pref_rs->as_query,
     '(
-      SELECT books.id, books.source, books.owner, books.title, books.price
+      SELECT "books"."id", "books"."source", "books"."owner", "books"."title", "books"."price"
         FROM (
-          SELECT me.id, me.name
-            FROM owners me
-          ORDER BY me.name
+          SELECT "me"."id", "me"."name"
+            FROM "owners" "me"
+          ORDER BY "me"."name"
           LIMIT ?
           OFFSET ?
-        ) me
-        LEFT JOIN books books
-          ON books.owner = me.id
-      ORDER BY me.name
+        ) "me"
+        LEFT JOIN "books" "books"
+          ON "books"."owner" = "me"."id"
+      ORDER BY "me"."name"
     )',
     [ [ { sqlt_datatype => "integer" } => 3 ], [ { sqlt_datatype => "integer" } => 1 ] ],
     'Expected SQL on *ordered* complex limited prefetch with non-selected root data',
@@ -201,17 +201,17 @@ throws_ok(
   is_same_sql_bind(
     $empty_ordered_pref_rs->as_query,
     '(
-      SELECT books.id, books.source, books.owner, books.title, books.price
+      SELECT "books"."id", "books"."source", "books"."owner", "books"."title", "books"."price"
         FROM (
-          SELECT me.id, me.name
-            FROM owners me
-          ORDER BY LENGTH(me.name), RANDOM()
+          SELECT "me"."id", "me"."name"
+            FROM "owners" "me"
+          ORDER BY LENGTH( me.name ), RANDOM()
           LIMIT ?
           OFFSET ?
-        ) me
-        LEFT JOIN books books
-          ON books.owner = me.id
-      ORDER BY LENGTH(me.name), RANDOM()
+        ) "me"
+        LEFT JOIN "books" "books"
+          ON "books"."owner" = "me"."id"
+      ORDER BY LENGTH( me.name ), RANDOM()
     )',
     [ [ { sqlt_datatype => "integer" } => 3 ], [ { sqlt_datatype => "integer" } => 1 ] ],
     'Expected SQL on *function-ordered* complex limited prefetch with non-selected root data',
