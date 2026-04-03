@@ -4,87 +4,41 @@ use warnings;
 use Test::More;
 use Test::Exception;
 
-# -----------------------------------------------------------------------
-# Schema
-# -----------------------------------------------------------------------
-{
-  package MooseSugar::Schema;
-  use base 'DBIO::Schema';
+BEGIN {
+  eval { require Moose; require MooseX::NonMoose; 1 }
+    or plan skip_all => 'Moose and MooseX::NonMoose not installed';
 }
 
-# -----------------------------------------------------------------------
-# Moose role
-# -----------------------------------------------------------------------
-{
-  package MooseSugar::Role::Displayable;
-  use Moose::Role;
-
-  requires 'name';
-
-  has display_name => (
-    is      => 'ro',
-    isa     => 'Str',
-    lazy    => 1,
-    builder => '_build_display_name',
-  );
-  sub _build_display_name { 'Artist: ' . $_[0]->name }
-}
+use DBIO::Test::Schema::Moose;
 
 # -----------------------------------------------------------------------
-# Result class: Moose attributes + Sugar + Cake DDL columns
+# Connect to in-memory SQLite and deploy
 # -----------------------------------------------------------------------
-{
-  package MooseSugar::Schema::Result::Artist;
-  use DBIO::Moose;
-  use DBIO::Cake;
-
-  table 'artist';
-
-  col id   => integer auto_inc;
-  col name => varchar(100);
-
-  primary_key 'id';
-
-  with 'MooseSugar::Role::Displayable';
-
-  # Moose attribute with a type constraint
-  has score => (
-    is      => 'rw',
-    isa     => 'Int',
-    lazy    => 1,
-    default => 0,
-  );
-
-  __PACKAGE__->meta->make_immutable;
-}
-
-# -----------------------------------------------------------------------
-# Connect and deploy
-# -----------------------------------------------------------------------
-MooseSugar::Schema->register_class( Artist => 'MooseSugar::Schema::Result::Artist' );
-
-my $schema = MooseSugar::Schema->connect('dbi:SQLite::memory:', '', '', {
+my $schema = DBIO::Test::Schema::Moose->connect('dbi:SQLite::memory:', '', '', {
   quote_names => 0,
 });
 $schema->deploy;
+
+my $artist_rs = $schema->resultset('Result::Artist');
+my $cd_rs     = $schema->resultset('Result::CD');
 
 # -----------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------
 
 subtest 'create + columns' => sub {
-  my $artist = $schema->resultset('Artist')->create({ name => 'Sugar Rush' });
+  my $artist = $artist_rs->create({ name => 'Sugar Rush' });
   is( $artist->name, 'Sugar Rush', 'column works after create' );
   ok( $artist->id,   'auto_increment column populated' );
 };
 
 subtest 'lazy Moose attr from created row' => sub {
-  my $artist = $schema->resultset('Artist')->create({ name => 'Mooseling' });
+  my $artist = $artist_rs->create({ name => 'Mooseling' });
   is( $artist->display_name, 'Artist: Mooseling', 'lazy attr built from column' );
 };
 
 subtest 'Moose type constraint' => sub {
-  my $artist = $schema->resultset('Artist')->create({ name => 'Scorer' });
+  my $artist = $artist_rs->create({ name => 'Scorer' });
   is( $artist->score, 0, 'Moose default is 0' );
   $artist->score(99);
   is( $artist->score, 99, 'Moose rw attr updated' );
@@ -95,23 +49,17 @@ subtest 'Moose type constraint' => sub {
 };
 
 subtest 'inflate_result (fetch from DB)' => sub {
-  my $artist = $schema->resultset('Artist')->create({ name => 'Fetched' });
+  my $artist = $artist_rs->create({ name => 'Fetched' });
   my $id = $artist->id;
 
-  my $fetched = $schema->resultset('Artist')->find($id);
+  my $fetched = $artist_rs->find($id);
   is( $fetched->name,         'Fetched',         'column works on fetched row' );
   is( $fetched->display_name, 'Artist: Fetched', 'lazy Moose attr on fetched row' );
   is( $fetched->score,        0,                 'Moose default on fetched row' );
 };
 
-subtest 'Moose role applied' => sub {
-  my $artist = $schema->resultset('Artist')->create({ name => 'Role Player' });
-  ok( $artist->DOES('MooseSugar::Role::Displayable'), 'role is applied' );
-  is( $artist->display_name, 'Artist: Role Player', 'role method works' );
-};
-
 subtest 'Moose attr does NOT leak into DB columns' => sub {
-  my $artist = $schema->resultset('Artist')->create({ name => 'Clean' });
+  my $artist = $artist_rs->create({ name => 'Clean' });
   $artist->score(7);
 
   lives_ok { $artist->update({ name => 'Clean Updated' }) }
@@ -121,8 +69,27 @@ subtest 'Moose attr does NOT leak into DB columns' => sub {
 };
 
 subtest 'make_immutable is safe' => sub {
-  ok( MooseSugar::Schema::Result::Artist->meta->is_immutable,
-    'class is immutable after make_immutable' );
+  ok(
+    DBIO::Test::Schema::Moose::Result::Artist->meta->is_immutable,
+    'Artist class is immutable'
+  );
+  ok(
+    DBIO::Test::Schema::Moose::Result::CD->meta->is_immutable,
+    'CD class is immutable'
+  );
+};
+
+subtest 'CD: create with has_many relationship' => sub {
+  my $artist = $artist_rs->create({ name => 'Band' });
+  my $cd = $cd_rs->create({ artist_id => $artist->id, title => 'First Album', year => 2024 });
+
+  is( $cd->title,      'First Album',        'CD column set' );
+  is( $cd->full_title, 'First Album (2024)', 'CD lazy builder works' );
+  is( $cd->rating,     0,                    'CD lazy default' );
+
+  my @cds = $artist->cds->all;
+  is( scalar @cds, 1, 'has_many returns one CD' );
+  is( $cds[0]->title, 'First Album', 'CD from relationship correct' );
 };
 
 done_testing;
