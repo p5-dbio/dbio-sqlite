@@ -5,16 +5,16 @@ use Test::More;
 use Test::Exception;
 
 BEGIN {
-  eval { require Moo; 1 }
-    or plan skip_all => 'Moo not installed';
+  eval { require Moose; require MooseX::NonMoose; 1 }
+    or plan skip_all => 'Moose and MooseX::NonMoose not installed';
 }
 
-use DBIO::Test::Schema::MooCake;
+use DBIO::Test::Schema::MooseSugar;
 
 # -----------------------------------------------------------------------
 # Connect to in-memory SQLite and deploy
 # -----------------------------------------------------------------------
-my $schema = DBIO::Test::Schema::MooCake->connect('dbi:SQLite::memory:', '', '', {
+my $schema = DBIO::Test::Schema::MooseSugar->connect('dbi:SQLite::memory:', '', '', {
   quote_names => 0,
 });
 $schema->deploy;
@@ -27,38 +27,41 @@ my $cd_rs     = $schema->resultset('CD');
 # -----------------------------------------------------------------------
 
 subtest 'create + columns' => sub {
-  my $artist = $artist_rs->create({ name => 'Cake Baker' });
-  is( $artist->name, 'Cake Baker', 'column works after create' );
+  my $artist = $artist_rs->create({ name => 'Sugar Rush' });
+  is( $artist->name, 'Sugar Rush', 'column works after create' );
   ok( $artist->id,   'auto_increment column populated' );
 };
 
-subtest 'lazy Moo attr from created row' => sub {
-  my $artist = $artist_rs->create({ name => 'Lazybird' });
-  is( $artist->display_name, 'Artist: Lazybird', 'lazy builder on created row' );
+subtest 'lazy Moose attr from created row' => sub {
+  my $artist = $artist_rs->create({ name => 'Mooseling' });
+  is( $artist->display_name, 'Artist: Mooseling', 'lazy attr built from column' );
 };
 
-subtest 'Moo default attr' => sub {
+subtest 'Moose type constraint' => sub {
   my $artist = $artist_rs->create({ name => 'Scorer' });
-  is( $artist->score, 0, 'lazy default is 0' );
-  $artist->score(42);
-  is( $artist->score, 42, 'rw attr updated' );
+  is( $artist->score, 0, 'Moose default is 0' );
+  $artist->score(99);
+  is( $artist->score, 99, 'rw attr updated' );
+  throws_ok { $artist->score('not an int') }
+    qr/Validation failed|isa check/i,
+    'type constraint enforced';
 };
 
 subtest 'inflate_result (fetch from DB)' => sub {
   my $artist = $artist_rs->create({ name => 'Fetched' });
   my $fetched = $artist_rs->find( $artist->id );
-  is( $fetched->name,         'Fetched',          'column works on fetched row' );
-  is( $fetched->display_name, 'Artist: Fetched',  'lazy attr on fetched row' );
-  is( $fetched->score,        0,                  'Moo default on fetched row' );
+  is( $fetched->name,         'Fetched',         'column works on fetched row' );
+  is( $fetched->display_name, 'Artist: Fetched', 'lazy Moose attr on fetched row' );
+  is( $fetched->score,        0,                 'Moose default on fetched row' );
 };
 
-subtest 'Moo attr does NOT leak into DB columns' => sub {
+subtest 'Moose attr does NOT leak into DB columns' => sub {
   my $artist = $artist_rs->create({ name => 'Clean' });
-  $artist->score(99);
+  $artist->score(7);
   lives_ok { $artist->update({ name => 'Clean Updated' }) }
-    'update with Moo attr set does not crash';
+    'update with Moose attr set does not crash';
   is( $artist->name,  'Clean Updated', 'column updated correctly' );
-  is( $artist->score, 99,              'Moo attr preserved after update' );
+  is( $artist->score, 7,               'Moose attr preserved after update' );
 };
 
 subtest 'custom ResultSet: by_name' => sub {
@@ -88,11 +91,20 @@ subtest 'CD: create with has_many relationship' => sub {
 
 subtest 'CD uses default ResultSet' => sub {
   isa_ok( $cd_rs, 'DBIO::ResultSet' );
-  ok( !$cd_rs->isa('DBIO::Test::Schema::MooCake::ResultSet::CD'),
+  ok( !$cd_rs->isa('DBIO::Test::Schema::MooseSugar::ResultSet::CD'),
     'no custom CD ResultSet' );
 };
 
-subtest 'schema verbose Moo attr' => sub {
+subtest 'make_immutable: Result classes' => sub {
+  ok( DBIO::Test::Schema::MooseSugar::Result::Artist->meta->is_immutable, 'Artist immutable' );
+  ok( DBIO::Test::Schema::MooseSugar::Result::CD->meta->is_immutable,     'CD immutable' );
+};
+
+subtest 'make_immutable: schema class' => sub {
+  ok( DBIO::Test::Schema::MooseSugar->meta->is_immutable, 'schema class immutable' );
+};
+
+subtest 'schema verbose Moose attr' => sub {
   is( $schema->verbose, 0, 'verbose defaults to 0' );
   $schema->verbose(1);
   is( $schema->verbose, 1, 'verbose rw writable' );
