@@ -23,16 +23,20 @@ my $schema = DBIO::SQLite::Test->init_schema(
 #   Artist 2 (Random Boy Band)    -> CD 4       -> 3 tracks      = 3 tracks
 #   Artist 3 (We Are Goth)        -> CD 5       -> 3 tracks      = 3 tracks
 
-# --- HAVING with hashref condition (generates bind) ---
+# --- HAVING with literal condition + bind operator ---
+# Note: hashref keys like { 'COUNT(tracks.trackid)' => ... } do not work
+# with quote_names because SQL::Abstract treats the key as an identifier
+# and quotes the dot as a separator: "COUNT(tracks"."trackid)".
+# Use literal SQL for function calls in HAVING.
 {
   my $rs = $schema->resultset('Artist')->search(undef, {
     join     => { cds => 'tracks' },
     group_by => ['me.artistid', 'me.name'],
-    having   => { 'COUNT(tracks.trackid)' => { '>' => 3 } },
+    having   => \[ 'COUNT("tracks"."trackid") > ?', 3 ],
   });
   my @artists = $rs->all;
-  is(scalar @artists, 1, 'HAVING with hashref bind: 1 artist with > 3 tracks');
-  is($artists[0]->name, 'Caterwauler McCrae', 'HAVING with hashref bind: correct artist')
+  is(scalar @artists, 1, 'HAVING with literal+bind operator: 1 artist with > 3 tracks');
+  is($artists[0]->name, 'Caterwauler McCrae', 'HAVING with literal+bind operator: correct artist')
     if @artists;
 }
 
