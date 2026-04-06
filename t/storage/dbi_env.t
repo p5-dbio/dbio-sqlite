@@ -7,7 +7,7 @@ use DBIO::Util 'sigwarn_silencer';
 
 BEGIN { delete @ENV{qw(DBI_DSN DBI_DRIVER)} }
 
-$ENV{DBIOTEST_LOCK_HOLDER} = -1;
+$ENV{DBIO_TEST_LOCK_HOLDER} = -1;
 
 # pre-populate
 my $schema = DBIO::SQLite::Test->init_schema(sqlite_use_file => 1);

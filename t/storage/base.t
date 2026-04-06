@@ -177,7 +177,7 @@ for my $type (keys %$invocations) {
 # but work with ENV at the same time
 SKIP: for my $env_dsn (undef, (DBIO::SQLite::Test->_database)[0] ) {
   skip( 'Subtest relies on being connected to SQLite without overrides', 1 ) if (
-    $ENV{DBIOTEST_SWAPOUT_SQLAC_WITH}
+    $ENV{DBIO_TEST_SWAPOUT_SQLAC_WITH}
       or
     ( $env_dsn and $env_dsn !~ /\:SQLite\:/ )
   );

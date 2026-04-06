@@ -8,8 +8,8 @@ my ($initial_inc_contents, $expected_dbic_deps, $require_sites);
 BEGIN {
   # these envvars *will* bring in more stuff than the baseline
   delete @ENV{qw(
-    DBIOTEST_SWAPOUT_SQLAC_WITH
-    DBIOTEST_SQLT_DEPLOY
+    DBIO_TEST_SWAPOUT_SQLAC_WITH
+    DBIO_TEST_SQLT_DEPLOY
     DBIO_TRACE
   )};
 
@@ -85,13 +85,13 @@ BEGIN {
   delete @ENV{qw(
     DBIO_TRACE
     DBIO_SHUFFLE_UNORDERED_RESULTSETS
-    DBIOTEST_SQLT_DEPLOY
-    DBIOTEST_SQLITE_REVERSE_DEFAULT_ORDER
-    DBIOTEST_VIA_REPLICATED
-    DBIOTEST_DEBUG_CONCURRENCY_LOCKS
+    DBIO_TEST_SQLT_DEPLOY
+    DBIO_TEST_SQLITE_REVERSE_DEFAULT_ORDER
+    DBIO_TEST_VIA_REPLICATED
+    DBIO_TEST_DEBUG_CONCURRENCY_LOCKS
   )};
 
-  $ENV{DBIOTEST_ANFANG_DEFANG} = 1;
+  $ENV{DBIO_TEST_ANFANG_DEFANG} = 1;
 
   # make sure extras do not load even when this is set
   $ENV{PERL_STRICTURES_EXTRA} = 1;
@@ -107,7 +107,7 @@ BEGIN {
 
 BEGIN {
   delete $ENV{$_} for qw(
-    DBIOTEST_DEBUG_CONCURRENCY_LOCKS
+    DBIO_TEST_DEBUG_CONCURRENCY_LOCKS
   );
 }
 

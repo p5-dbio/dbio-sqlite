@@ -13,9 +13,9 @@ for my $type (qw/PG MYSQL SQLite/) {
     my @dsn = $type eq 'SQLite'
       ? DBIO::SQLite::Test->_database(sqlite_use_file => 1)
       : do {
-        skip "Skipping $type tests without DBIOTEST_${type}_DSN", 1
-          unless $ENV{"DBIOTEST_${type}_DSN"};
-        @ENV{map { "DBIOTEST_${type}_${_}" } qw/DSN USER PASS/}
+        skip "Skipping $type tests without DBIO_TEST_${type}_DSN", 1
+          unless $ENV{"DBIO_TEST_${type}_DSN"};
+        @ENV{map { "DBIO_TEST_${type}_${_}" } qw/DSN USER PASS/}
       }
     ;
 

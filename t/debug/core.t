@@ -10,7 +10,7 @@ use DBIO::SQLite::Test;
 use DBIO::Util qw(slurp_file);
 use File::Temp qw(tmpnam);
 
-BEGIN { delete @ENV{qw(DBIO_TRACE DBIO_TRACE_PROFILE DBIOTEST_SQLITE_USE_FILE)} }
+BEGIN { delete @ENV{qw(DBIO_TRACE DBIO_TRACE_PROFILE DBIO_TEST_SQLITE_USE_FILE)} }
 
 my $schema = DBIO::SQLite::Test->init_schema();
 

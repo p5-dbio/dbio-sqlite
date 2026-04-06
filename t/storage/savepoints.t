@@ -24,8 +24,8 @@ use DBIO::SQLite::Test;
 }
 
 my $env2optdep = {
-  DBIOTEST_PG => 'test_rdbms_pg',
-  DBIOTEST_MYSQL => 'test_rdbms_mysql',
+  DBIO_TEST_PG => 'test_rdbms_pg',
+  DBIO_TEST_MYSQL => 'test_rdbms_mysql',
 };
 
 my $schema;

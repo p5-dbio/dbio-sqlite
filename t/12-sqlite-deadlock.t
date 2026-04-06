@@ -5,8 +5,8 @@ use Test::More;
 use Test::Exception;
 use File::Temp ();
 
-plan skip_all => 'Set $ENV{DBIOTEST_EXTENDED} to run this test'
-  unless $ENV{DBIOTEST_EXTENDED};
+plan skip_all => 'Set $ENV{DBIO_TEST_EXTENDED} to run this test'
+  unless $ENV{DBIO_TEST_EXTENDED};
 
 use DBIO::SQLite::Test;
 

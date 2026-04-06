@@ -1,11 +1,11 @@
 # work around brain damage in PPerl (yes, it has to be a global)
 $SIG{__WARN__} = sub {
   warn @_ unless $_[0] =~ /\QUse of "goto" to jump into a construct is deprecated/
-} if ($ENV{DBIOTEST_IN_PERSISTENT_ENV});
+} if ($ENV{DBIO_TEST_IN_PERSISTENT_ENV});
 
 # the persistent environments run with this flag first to see if
 # we will run at all (e.g. it will fail if $^X doesn't match)
-exit 0 if $ENV{DBIOTEST_PERSISTENT_ENV_BAIL_EARLY};
+exit 0 if $ENV{DBIO_TEST_PERSISTENT_ENV_BAIL_EARLY};
 
 # Do the override as early as possible so that CORE::bless doesn't get compiled away
 # We will replace $bless_override only if we are in author mode
@@ -32,7 +32,7 @@ BEGIN {
 
 
 my $TB = Test::More->builder;
-if ($ENV{DBIOTEST_IN_PERSISTENT_ENV}) {
+if ($ENV{DBIO_TEST_IN_PERSISTENT_ENV}) {
   # without this explicit close TB warns in END after a ->reset
   close ($TB->$_) for qw(output failure_output todo_output);
 
@@ -308,7 +308,7 @@ unless (DBIO::Test->is_plain) {
   if (
     DBIO::Test::Util::LeakTracer::CV_TRACING
       and
-    ! $ENV{DBIOTEST_SWAPOUT_SQLAC_WITH}
+    ! $ENV{DBIO_TEST_SWAPOUT_SQLAC_WITH}
   ) {
     visit_refs(
       refs => [ $base_collection ],
@@ -324,7 +324,7 @@ unless (DBIO::Test->is_plain) {
     if (
       ! DBIO::Test->is_plain
         and
-      ! $ENV{DBIOTEST_IN_PERSISTENT_ENV}
+      ! $ENV{DBIO_TEST_IN_PERSISTENT_ENV}
     ) {
 
       # FIXME - ideally we should be able to just populate an alternative
@@ -532,7 +532,7 @@ assert_empty_weakregistry ($weak_registry);
 my $persistence_tests;
 SKIP: {
   skip 'Test already in a persistent loop', 1
-    if $ENV{DBIOTEST_IN_PERSISTENT_ENV};
+    if $ENV{DBIO_TEST_IN_PERSISTENT_ENV};
 
   skip 'Main test failed - skipping persistent env tests', 1
     unless $TB->is_passing;
@@ -540,7 +540,7 @@ SKIP: {
   skip "Test::Builder\@@{[ Test::Builder->VERSION ]} known to break persistence tests", 1
     if modver_gt_or_eq_and_lt( 'Test::More', '1.200', '1.301001_099' );
 
-  local $ENV{DBIOTEST_IN_PERSISTENT_ENV} = 1;
+  local $ENV{DBIO_TEST_IN_PERSISTENT_ENV} = 1;
 
   $persistence_tests = {
     PPerl => {
@@ -582,7 +582,7 @@ SKIP: {
 
     # since PPerl is racy and sucks - just prime the "server"
     {
-      local $ENV{DBIOTEST_PERSISTENT_ENV_BAIL_EARLY} = 1;
+      local $ENV{DBIO_TEST_PERSISTENT_ENV_BAIL_EARLY} = 1;
       system(@cmd);
       sleep 1;
 

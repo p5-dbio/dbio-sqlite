@@ -82,7 +82,7 @@ for my $db (sort {
   : $b eq 'ORA' ? -1
   : $a cmp $b
 } keys %dbs) {
-  my ($dsn, $user, $pass) = map $ENV{"DBIOTEST_${db}_$_"}, qw/DSN USER PASS/;
+  my ($dsn, $user, $pass) = map $ENV{"DBIO_TEST_${db}_$_"}, qw/DSN USER PASS/;
 
   next unless $dsn;
 

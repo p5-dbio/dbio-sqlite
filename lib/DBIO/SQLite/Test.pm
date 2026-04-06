@@ -82,7 +82,7 @@ Returns the path to the file-based test SQLite database.
 
 sub _sqlite_dbfilename {
   my $self = shift;
-  my $holder = $ENV{DBIOTEST_LOCK_HOLDER} || $$;
+  my $holder = $ENV{DBIO_TEST_LOCK_HOLDER} || $$;
   $holder = $$ if $holder == -1;
   return _vardir() . "/DBIOTest-$holder.db";
 }
@@ -97,7 +97,7 @@ sub _sqlite_dbname {
   my $self = shift;
   my %args = @_;
   return $self->_sqlite_dbfilename if (
-    defined $args{sqlite_use_file} ? $args{sqlite_use_file} : $ENV{'DBIOTEST_SQLITE_USE_FILE'}
+    defined $args{sqlite_use_file} ? $args{sqlite_use_file} : $ENV{'DBIO_TEST_SQLITE_USE_FILE'}
   );
   return ":memory:";
 }
@@ -113,9 +113,9 @@ sub _database {
   my $self = shift;
   my %args = @_;
 
-  if ($ENV{DBIOTEST_DSN}) {
+  if ($ENV{DBIO_TEST_DSN}) {
     return (
-      (map { $ENV{"DBIOTEST_${_}"} || '' } qw/DSN DBUSER DBPASS/),
+      (map { $ENV{"DBIO_TEST_${_}"} || '' } qw/DSN DBUSER DBPASS/),
       { AutoCommit => 1, %args },
     );
   }
@@ -138,7 +138,7 @@ sub _database {
       $dbh->do('PRAGMA synchronous = OFF');
 
       if (
-        $ENV{DBIOTEST_SQLITE_REVERSE_DEFAULT_ORDER}
+        $ENV{DBIO_TEST_SQLITE_REVERSE_DEFAULT_ORDER}
           and
         $storage->_server_info->{normalized_dbms_version} >= 3.007009
       ) {
@@ -211,11 +211,11 @@ sub init_schema {
 sub _cleanup_dbfile {
   my $self = shift;
   if (
-    ! $ENV{DBIOTEST_LOCK_HOLDER}
+    ! $ENV{DBIO_TEST_LOCK_HOLDER}
       or
-    $ENV{DBIOTEST_LOCK_HOLDER} == -1
+    $ENV{DBIO_TEST_LOCK_HOLDER} == -1
       or
-    $ENV{DBIOTEST_LOCK_HOLDER} == $$
+    $ENV{DBIO_TEST_LOCK_HOLDER} == $$
   ) {
     my $db_file = $self->_sqlite_dbfilename;
     unlink $_ for ($db_file, "${db_file}-journal");

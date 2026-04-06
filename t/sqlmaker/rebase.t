@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 # test relies on the original default
-BEGIN { delete @ENV{qw( DBIOTEST_SWAPOUT_SQLAC_WITH )} }
+BEGIN { delete @ENV{qw( DBIO_TEST_SWAPOUT_SQLAC_WITH )} }
 
 use Test::More;
 
