@@ -5,3 +5,25 @@ Revision history for DBIO-SQLite
     - Declare DateTime::Format::SQLite as a runtime dependency
     - Add AccessBroker connect smoke coverage for SQLite storage
     - Move remaining driver _ENV_ usage to DBIO::Util helpers
+    - Add native Introspect/Diff/DDL/Deploy modules (parallel to the
+      DBIO::PostgreSQL set). Replaces the SQL::Translator path for
+      schema deployment and diffing:
+        . DBIO::SQLite::Introspect (+ Tables, Columns, Indexes,
+          ForeignKeys) via sqlite_master and PRAGMAs
+        . DBIO::SQLite::DDL generator from Result classes, with
+          INTEGER PRIMARY KEY AUTOINCREMENT inline
+        . DBIO::SQLite::Diff (+ Table, Column, Index) with columns
+          inlined on CREATE TABLE and drop-then-create on index changes
+        . DBIO::SQLite::Deploy with install/diff/apply/upgrade using
+          an in-memory SQLite as the test-deploy target
+    - Add DBIO::SQLite::Result component with sqlite_index declaration
+      (consumed by DBIO::SQLite::DDL)
+    - Storage now declares dbio_deploy_class so DBIO::Schema->deploy()
+      routes through DBIO::SQLite::Deploy instead of SQL::Translator
+    - Remove workspace .proverc (tests run against installed dbio core
+      via dzil install, no hidden sibling-repo linkage)
+    - Add tests: t/30-introspect.t (round-trip with tables, FKs,
+      composite FK, partial index, WITHOUT ROWID), t/31-diff.t
+      (create/drop/change for tables/columns/indexes plus orchestrator),
+      t/32-deploy.t (end-to-end install/diff/apply/upgrade with FK
+      relationships via belongs_to)

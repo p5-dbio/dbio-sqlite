@@ -10,6 +10,8 @@ use mro 'c3';
 
 __PACKAGE__->register_driver('SQLite' => __PACKAGE__);
 
+sub dbio_deploy_class { 'DBIO::SQLite::Deploy' }
+
 use Context::Preserve 'preserve_context';
 use SQL::Abstract::Util 'is_plain_value';
 use DBIO::Util qw(iv_size modver_gt_or_eq os_name sigwarn_silencer);
