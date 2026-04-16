@@ -41,7 +41,7 @@ is_deeply(
       DBIO::Test::SQLMRebase
       DBIO::SQLMaker::ClassicExtensions
     ),
-    @{ mro::get_linear_isa( 'DBIO' ) },
+    @{ mro::get_linear_isa( 'DBIO::Base' ) },
     @{ mro::get_linear_isa( 'SQL::Abstract' ) },
   ],
   'Expected SQLM object inheritance after rebase',
