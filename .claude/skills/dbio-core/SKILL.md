@@ -6,133 +6,92 @@ allowed-tools: Read, Grep, Glob
 model: sonnet
 ---
 
-DBIO is a fork of DBIx::Class. When working in DBIO or any DBIO driver, use this knowledge.
+DBIO = fork of DBIx::Class. Apply when working in DBIO core or any driver.
 
-## Key Differences from DBIx::Class
+## Diffs vs DBIx::Class
 
-- Namespace: `DBIO::` not `DBIx::Class::`
-- `DBIO::Core` replaces `DBIx::Class::Core`
-- `DBIO::Schema` replaces `DBIx::Class::Schema`
-- Uses `SQL::Abstract` (not `SQL::Abstract::Classic`)
-- Integrates: `DBIx::Class::TimeStamp` → `DBIO::Timestamp`, `DBIx::Class::Helpers` → DBIO core
-- SQL::Translator is OPTIONAL (only for legacy deploy) — being replaced by DB-specific modules
+- Namespace `DBIO::` (not `DBIx::Class::`); `DBIO::Core`, `DBIO::Schema`
+- Uses `SQL::Abstract` (not `::Classic`)
+- Integrated: `DBIx::Class::TimeStamp` → `DBIO::Timestamp`; `DBIx::Class::Helpers` → core
+- `SQL::Translator` optional (legacy deploy only) — being replaced by per-DB modules
 
 ## Architecture
 
 ```
-DBIO::Schema          — Database connection + ResultSource registry
-  └── DBIO::ResultSource  — Table/view definition (columns, relationships, etc.)
-       └── DBIO::ResultSet    — Query builder (search, filter, page)
-            └── DBIO::Row         — Single row object (CRUD)
-
-DBIO::Storage         — Abstract storage layer
-  └── DBIO::Storage::DBI  — DBI-based storage (most databases)
-
-DBIO::SQLMaker        — SQL generation (replaces SQL::Abstract integration)
+DBIO::Schema → DBIO::ResultSource → DBIO::ResultSet → DBIO::Row
+DBIO::Storage → DBIO::Storage::DBI
+DBIO::SQLMaker
 ```
 
-## Component System
+## Components
 
-DBIO uses a component loading system via `load_components`:
+`load_components('Foo')` resolves under `DBIO::`. Prefix `+` = absolute.
 
 ```perl
-package MyApp::DB;
-use base 'DBIO::Schema';
-__PACKAGE__->load_components('PostgreSQL');  # loads DBIO::PostgreSQL
+__PACKAGE__->load_components('PostgreSQL');           # DBIO::PostgreSQL
+__PACKAGE__->load_components('+My::Custom');          # absolute
 ```
 
-Components are resolved relative to `DBIO::` namespace. A `+` prefix means absolute:
+Driver components override `connection()` to set storage_type.
 
-```perl
-__PACKAGE__->load_components('+My::Custom::Component');
-```
+## Drivers (separate dists)
 
-## Driver Architecture
-
-Each database driver is a separate CPAN distribution:
-
-| Distribution | Component | Storage Class |
-|-------------|-----------|--------------|
+| Dist | Component | Storage |
+|---|---|---|
 | DBIO-PostgreSQL | `DBIO::PostgreSQL` | `DBIO::PostgreSQL::Storage` |
 | DBIO-MySQL | `DBIO::MySQL` | `DBIO::MySQL::Storage` |
 | DBIO-SQLite | `DBIO::SQLite` | `DBIO::SQLite::Storage` |
 | DBIO-Replicated | — | `DBIO::Storage::DBI::Replicated` |
 
-Driver components override `connection()` to set their storage type automatically.
-
-## Result Class Pattern
+## Result class
 
 ```perl
 package MyApp::DB::Result::User;
 use base 'DBIO::Core';
-
 __PACKAGE__->table('users');
 __PACKAGE__->add_columns(
-    id   => { data_type => 'integer', is_auto_increment => 1 },
-    name => { data_type => 'varchar', size => 255 },
+  id   => { data_type => 'integer', is_auto_increment => 1 },
+  name => { data_type => 'varchar', size => 255 },
 );
 __PACKAGE__->set_primary_key('id');
 __PACKAGE__->has_many(posts => 'MyApp::DB::Result::Post', 'user_id');
 ```
 
-## Relationship Types
+## Relationships
 
-- `belongs_to` — FK on this table
-- `has_many` — FK on related table
-- `has_one` — FK on related table, single result
-- `many_to_many` — Through a bridge table
-- `might_have` — Optional has_one
+`belongs_to` · `has_many` · `has_one` · `might_have` (optional has_one) · `many_to_many` (bridge)
 
-## ResultSet Chaining
+## ResultSet chaining
 
 ```perl
-my $rs = $schema->resultset('User')
-    ->search({ active => 1 })
-    ->search({ role => 'admin' })
-    ->order_by('name');
+$schema->resultset('User')->search({active=>1})->search({role=>'admin'})->order_by('name');
 ```
 
-## Testing
+## Testing rules
 
-- `DBIO::Test` provides test utilities
-- **Core tests MUST use `DBIO::Test::Storage` (fake storage)**, NEVER `dbi:SQLite` or any real DB
-- Driver integration tests use env vars: `DBIO_TEST_PG_DSN`, `DBIO_TEST_PG_DSN`, etc.
-- Test files in `t/`, author tests in `xt/`
-- **Shared test schemas** for cross-distribution features go in `DBIO::Test::Schema::*` under `dbio/lib/`
-- Do NOT redefine result classes inline in driver tests — use the shared namespace
+- Core tests MUST use `DBIO::Test::Storage` (fake). Never `dbi:SQLite` or real DB in core
+- Driver integration: env vars `DBIO_TEST_PG_DSN`, `DBIO_TEST_MYSQL_DSN`, etc.
+- `t/` = tests; `xt/` = author tests
+- Shared test schemas → `DBIO::Test::Schema::*` in `dbio/lib/`. Do NOT redefine result classes inline in driver tests
+- Optional dep skip pattern:
+  ```perl
+  BEGIN { eval { require Moo; 1 } or plan skip_all => 'Moo not installed' }
+  ```
+  List in cpanfile as `suggests`, never `requires`
 
-### Shared Test Schemas
+### Shared schemas
 
-| Schema | OO Layer | DDL | Description |
-|--------|----------|-----|-------------|
-| `DBIO::Test::Schema::Moo` | `DBIO::Moo` | `add_columns` | Moo result classes + Moo schema + custom ResultSet |
-| `DBIO::Test::Schema::Moose` | `DBIO::Moose` | `add_columns` | Moose result classes + Moose schema + custom ResultSet |
-| `DBIO::Test::Schema::MooCake` | `DBIO::Moo` + `DBIO::Cake` | Cake DDL | Moo + Cake combo |
-| `DBIO::Test::Schema::MooseSugar` | `DBIO::Moose` + `DBIO::Cake` | Cake DDL | Moose + Cake combo |
+| Schema | Layer | DDL |
+|---|---|---|
+| `DBIO::Test::Schema::Moo` | Moo | `add_columns` |
+| `DBIO::Test::Schema::Moose` | Moose | `add_columns` |
+| `DBIO::Test::Schema::MooCake` | Moo + Cake | Cake DDL |
+| `DBIO::Test::Schema::MooseSugar` | Moose + Cake | Cake DDL |
 
-Each schema has Artist + CD, a `has_many`/`belongs_to` relationship, one custom ResultSet (Artist) and one default (CD).
-
-### Optional deps in tests
-
-Skip the test if the dep is missing:
-```perl
-BEGIN { eval { require Moo; 1 } or plan skip_all => 'Moo not installed' }
-```
-List as `suggests` in cpanfile, never `requires`.
+Each: Artist + CD, has_many/belongs_to, one custom + one default ResultSet.
 
 ## OOP
 
-- Core DBIO uses `Class::Accessor::Grouped` + `Class::C3::Componentised`
-- Drivers may use `Moo` (e.g., PostgreSQL) or `Moose` (e.g., Replicated)
-- No specific framework is required — match the existing driver's choice
-
-## Moo / Moose Integration
-
-`DBIO::Moo` and `DBIO::Moose` are optional bridge modules (`suggests` in cpanfile). See the dedicated `dbio-moo` and `dbio-moose` skills for full details on FOREIGNBUILDARGS, the lazy requirement, combining with Cake/Candy, Schema/ResultSet usage, and `make_immutable`.
-
-## Copyright & Authorship
-
-- Original: DBIx::Class & DBIO Contributors (see AUTHORS file)
-- DBIO core copyright starts 2005 (original DBIx::Class)
-- New driver distributions: Torsten Raudssus, copyright 2026
-- Maintainer: Torsten Raudssus (GETTY on CPAN)
+- Core: `Class::Accessor::Grouped` + `Class::C3::Componentised`
+- Drivers: Moo (PostgreSQL) or Moose (Replicated) — match existing driver
+- `DBIO::Moo`/`DBIO::Moose` = optional bridges (`suggests`). See `dbio-moo` / `dbio-moose` skills for FOREIGNBUILDARGS, lazy rules, Cake/Candy combos, `make_immutable`
