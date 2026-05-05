@@ -5,6 +5,8 @@ our $VERSION = '0.900000';
 use strict;
 use warnings;
 
+use base 'DBIO::Introspect::Base';
+
 use DBIO::SQLite::Introspect::Tables;
 use DBIO::SQLite::Introspect::Columns;
 use DBIO::SQLite::Introspect::Indexes;
@@ -24,24 +26,6 @@ compare strategy used by L<DBIO::SQLite::Deploy>.
 The model shape mirrors L<DBIO::PostgreSQL::Introspect> so the same
 diff/deploy patterns apply, but only covers what SQLite actually has
 (no schemas, types, functions, RLS).
-
-=cut
-
-sub new { my ($class, %args) = @_; bless \%args, $class }
-
-sub dbh { $_[0]->{dbh} }
-
-=attr dbh
-
-A connected C<DBI> handle for SQLite. Required.
-
-=cut
-
-sub model { $_[0]->{model} //= $_[0]->_build_model }
-
-=method model
-
-Returns the full introspected model hashref. Built lazily.
 
 =cut
 
