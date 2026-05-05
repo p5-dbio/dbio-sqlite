@@ -29,11 +29,10 @@ $schema->storage->dbh_do(sub {
   __PACKAGE__->load_components(qw/UUIDColumns/);
   __PACKAGE__->table('uuid_test');
   __PACKAGE__->add_columns(
-    id   => { data_type => 'varchar', size => 36 },
+    id   => { data_type => 'varchar', size => 36, uuid_on_create => 1 },
     name => { data_type => 'varchar', size => 100, is_nullable => 1 },
   );
   __PACKAGE__->set_primary_key('id');
-  __PACKAGE__->uuid_columns('id');
 }
 
 $schema->register_class('UUIDTest' => 'DBIO::Test::Schema::UUIDTest');
@@ -52,11 +51,10 @@ is($row2->id, $explicit_id, 'Explicit UUID preserved on insert');
 my $row3 = $schema->resultset('UUIDTest')->create({ name => 'Another' });
 isnt($row->id, $row3->id, 'Two auto-generated UUIDs are different');
 
-# Test: uuid_columns accessor
-is_deeply(
-  DBIO::Test::Schema::UUIDTest->uuid_columns,
-  ['id'],
-  'uuid_columns returns configured columns'
+# Test: column-info flag is recorded
+ok(
+  DBIO::Test::Schema::UUIDTest->column_info('id')->{_uuid_on_create},
+  '_uuid_on_create flag set on column'
 );
 
 done_testing;
