@@ -19,7 +19,7 @@ ok( check_rs($employees), "intial positions" );
 
 hammer_rs( $employees );
 
-DBIO::Test::Employee->grouping_column('group_id');
+set_grouping($schema, 'group_id');
 $employees->delete();
 foreach my $group_id (1..4) {
     foreach (1..6) {
@@ -120,7 +120,7 @@ is_deeply(
 # multicol tests begin here
 #####
 
-DBIO::Test::Employee->grouping_column(['group_id_2', 'group_id_3']);
+set_grouping($schema, 'group_id_2', 'group_id_3');
 $employees->delete();
 foreach my $group_id_2 (1..4) {
     foreach my $group_id_3 (1..4) {
@@ -275,6 +275,13 @@ sub hammer_rs {
         }
 
     }
+}
+
+sub set_grouping {
+    my ($schema, @cols) = @_;
+    my $info = $schema->source('Employee')->columns_info;
+    delete $_->{_ordered_grouping} for values %$info;
+    $info->{$_}{_ordered_grouping} = 1 for @cols;
 }
 
 sub check_rs {
