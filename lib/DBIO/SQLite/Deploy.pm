@@ -101,7 +101,7 @@ L<DBIO::SQLite::Diff> object.
 sub diff {
   my ($self) = @_;
 
-  my $source_model = DBIO::SQLite::Introspect->new(dbh => $self->_dbh)->model;
+  my $source_model = $self->_new_introspect($self->_dbh)->model;
 
   my $temp_dbh = DBI->connect('dbi:SQLite::memory:', '', '', {
     RaiseError => 1, PrintError => 0, AutoCommit => 1,
@@ -113,7 +113,7 @@ sub diff {
     $temp_dbh->do($stmt);
   }
 
-  my $target_model = DBIO::SQLite::Introspect->new(dbh => $temp_dbh)->model;
+  my $target_model = $self->_new_introspect($temp_dbh)->model;
   $temp_dbh->disconnect;
 
   return DBIO::SQLite::Diff->new(
@@ -164,6 +164,18 @@ sub upgrade {
 # --- Internal ---
 
 sub _dbh { $_[0]->schema->storage->dbh }
+
+sub _new_introspect {
+  my ($self, $dbh) = @_;
+  return DBIO::SQLite::Introspect->new(dbh => $dbh);
+}
+
+=method _new_introspect
+
+Factory for the introspector. Override in a subclass to use a custom
+L<DBIO::SQLite::Introspect> subclass.
+
+=cut
 
 sub _split_statements {
   my ($sql) = @_;
