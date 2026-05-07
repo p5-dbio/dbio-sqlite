@@ -9,6 +9,7 @@ use DBI;
 use DBIO::SQLite::DDL;
 use DBIO::SQLite::Introspect;
 use DBIO::SQLite::Diff;
+use DBIO::SQL::Util qw(_split_statements);
 
 =head1 DESCRIPTION
 
@@ -177,26 +178,7 @@ L<DBIO::SQLite::Introspect> subclass.
 
 =cut
 
-sub _split_statements {
-  my ($sql) = @_;
-  my @stmts;
-  my $current = '';
-
-  for my $line (split /\n/, $sql) {
-    $current .= "$line\n";
-    if ($line =~ /;\s*$/) {
-      $current =~ s/^\s+|\s+$//g;
-      push @stmts, $current if $current =~ /\S/;
-      $current = '';
-    }
-  }
-  $current =~ s/^\s+|\s+$//g;
-  push @stmts, $current if $current =~ /\S/;
-
-  return @stmts;
-}
-
-=seealso
+1;
 
 =over 4
 

@@ -6,13 +6,11 @@ allowed-tools: Read, Grep, Glob
 model: sonnet
 ---
 
-## Bundle
-
-DBIO uses `[@DBIO]` from `Dist::Zilla::PluginBundle::DBIO`. **NOT `[@Author::GETTY]`**.
+DBIO uses `[@DBIO]` from `Dist::Zilla::PluginBundle::DBIO`. NOT `[@Author::GETTY]`.
 
 ## dist.ini
 
-**Drivers:**
+Drivers:
 ```ini
 name = DBIO-DriverName
 
@@ -20,7 +18,7 @@ name = DBIO-DriverName
 ```
 Bundle sets `author`, `license`, `copyright_holder`. No version/copyright_year.
 
-**Core** (`core = 1`):
+Core (`core = 1`):
 ```ini
 name = DBIO
 copyright_year = 2005
@@ -34,17 +32,11 @@ VersionFromMainModule, MakeMaker::Awesome, ExecDir; no GithubMeta.
 
 - Drivers: git tags via `@Git::VersionManager` (first_version = 0.900000)
 - Core: `$VERSION` in lib/DBIO.pm via `[VersionFromMainModule]`
-
 Target: `1.000000` when stable.
 
 ## PodWeaver
 
-- `# ABSTRACT:` required on every .pm
-- `=attr name` after `has` → ATTRIBUTES section
-- `=method name` after `sub` → METHODS section
-- Omit NAME, VERSION, AUTHORS, COPYRIGHT (auto-generated)
-- POD inline, not at end of file
-- Cross-refs: `L<DBIO::Module>`
+`# ABSTRACT:` required on every .pm. `=attr name` after `has` → ATTRIBUTES. `=method name` after `sub` → METHODS. Omit NAME, VERSION, AUTHORS, COPYRIGHT (auto-generated). POD inline. Cross-refs: `L<DBIO::Module>`.
 
 ## Dependencies
 

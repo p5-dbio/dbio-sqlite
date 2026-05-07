@@ -5,6 +5,8 @@ our $VERSION = '0.900000';
 use strict;
 use warnings;
 
+use DBIO::SQL::Util qw(_quote_ident);
+
 =head1 DESCRIPTION
 
 C<DBIO::SQLite::DDL> generates a SQLite DDL script from the L<DBIO::Schema>
@@ -199,13 +201,6 @@ sub _sqlite_column_type {
   );
 
   return $type_map{ lc $type } // uc $type;
-}
-
-sub _quote_ident {
-  my ($name) = @_;
-  return $name if $name =~ /^[a-z_][a-z0-9_]*$/i;
-  $name =~ s/"/""/g;
-  return qq{"$name"};
 }
 
 1;
