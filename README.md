@@ -1,23 +1,105 @@
-# DBIO-SQLite
+# DBIO::SQLite
 
-SQLite driver distribution for DBIO.
+SQLite driver for DBIO (fork of DBIx::Class::Storage::DBI::SQLite).
 
-## Scope
+## Supports
 
-- Provides SQLite storage behavior: `DBIO::SQLite::Storage`
-- Provides SQLite SQLMaker: `DBIO::SQLite::SQLMaker`
-- Owns SQLite-specific tests from the historical DBIx::Class monolithic test
-  layout
+- desired-state deployment via test-deploy-and-compare (L<DBIO::SQLite::Deploy>)
+- native introspection (L<DBIO::SQLite::Introspect>)
+- native diff (L<DBIO::SQLite::Diff>)
+- native DDL generation (L<DBIO::SQLite::DDL>)
 
-## Migration Notes
+## Usage
 
-- `DBIx::Class::Storage::DBI::SQLite` -> `DBIO::SQLite::Storage`
-- `DBIx::Class::SQLMaker::SQLite` -> `DBIO::SQLite::SQLMaker`
+    package MyApp::DB;
+    use base 'DBIO::Schema';
+    __PACKAGE__->load_components('SQLite');
 
-When installed, DBIO core can autodetect SQLite DSNs and load the storage
-class through `DBIO::Storage::DBI` driver registration.
+    my $schema = MyApp::DB->connect('dbi:SQLite:myapp.db');
+
+For in-memory testing:
+
+```perl
+my $schema = MyApp::DB->connect('dbi:SQLite::memory:');
+```
+
+DBIO core autodetects `dbi:SQLite:` DSNs and loads this storage automatically.
+
+## SQLite Features
+
+**Types**
+- `INTEGER` — 64-bit signed integer (also used for PRIMARY KEY / AUTOINCREMENT)
+- `REAL` — IEEE 754 64-bit floating point
+- `TEXT` — UTF-8 text
+- `BLOB` — binary data (stored as-is)
+- `NUMERIC` — affinity for integer/real/decimal
+
+**SQLite JSON (version 3.38+)**
+- `JSON` type with `json_extract`, `json_array`, `json_object` functions
+- `->` and `->>` operators for JSON path extraction
+- Comparison operators work on JSON values
+
+**Full-Text Search (FTS5)**
+- `fts5` virtual table support via `DBIO::SQLite::Result::FTS5`
+- `MATCH` operator for full-text queries
+- BM25 ranking and relevance scoring
+- Trigram tokenizers for fuzzy matching
+
+**Indexes**
+- `PRIMARY KEY` — integer primary key is an alias for rowid
+- `UNIQUE` constraints create indexes
+- `INDEXED BY` for query-time index selection
+- Partial indexes via `WHERE` clause (SQLite 3.8.0+)
+- Expression indexes via `GENERATED ALWAYS AS` columns
+
+**SQLite-Specific Features**
+- `INSERT OR IGNORE` — skip on constraint violation
+- `INSERT OR REPLACE` — replace existing row on conflict
+- `ON CONFLICT ... DO NOTHING` — conflict resolution
+- `RETURNING` clause (SQLite 3.35+)
+- `UPSERT` (INSERT ON CONFLICT) syntax
+- Multiple schemas via ATTACH DATABASE
+- Transaction savepoints with nested transactions
+- `VACUUM` for database maintenance
+
+**Introspection**
+- `sqlite_master` for schema metadata
+- `PRAGMA table_info`, `PRAGMA index_list`, `PRAGMA foreign_key_list`
+- `sqlite_sequence` for AUTOINCREMENT tracking
+
+## Deploy
+
+L<DBIO::SQLite::Deploy> orchestrates test-deploy-and-compare:
+
+1. Introspect live database via sqlite_master and PRAGMA (L<DBIO::SQLite::Introspect>)
+2. Deploy desired schema to a temporary in-memory database (`:memory:`)
+3. Introspect the temporary database the same way
+4. Diff source vs target (L<DBIO::SQLite::Diff>)
+
+SQLite's `:memory:` database makes deploy testing extremely fast — no cleanup needed.
+
+Install (`install_ddl`) creates fresh schema. Upgrade diffs live vs. desired.
 
 ## Testing
 
-SQLite tests in this distribution use in-memory databases and do not need
-external database credentials.
+```bash
+export DBIO_TEST_SQLITE_DSN="dbi:SQLite::memory:"
+prove -l t/
+```
+
+SQLite is ideal for testing because `:memory:` requires no server process.
+Offline tests (`t/00-load.t`) run without any database.
+
+## Requirements
+
+- Perl 5.36+
+- L<DBD::SQLite|https://metacpan.org/pod/DBD::SQLite>
+- DBIO core
+
+## See Also
+
+L<DBIO::Introspect::Base>, L<DBIO::Diff::Base>, L<DBIO::Deploy>
+
+## Repository
+
+L<https://github.com/p5-dbio/dbio-sqlite>
